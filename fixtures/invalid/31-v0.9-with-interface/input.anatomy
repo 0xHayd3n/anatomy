@@ -1,0 +1,20 @@
+anatomy_version = "0.9"
+tagline = "v0.9 fixture with [[interface.exports]] — must be rejected"
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "rejected"
+fingerprint = "smhyg86mtshrggm57g8t"
+
+[[interface.exports]]
+symbol = "main"
+kind = "function"
+summary = "should be rejected by additionalProperties"
+
+[generated]
+at = 2026-05-09T12:00:00.000Z
+by = "anatomy-cli@0.12.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.9/schema.json"

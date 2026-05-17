@@ -1,0 +1,19 @@
+anatomy_version = "0.12"
+tagline = "v0.12 fixture: ast_pattern with neither expect_in nor forbid_in."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "verify-test"
+fingerprint = "5pxem96c7bvwecyh2b0d"
+
+[[rules]]
+rule = "broken verify"
+verify = { kind = "ast_pattern", lang = "ts", pattern = "fetch($_)" }
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.12/schema.json"

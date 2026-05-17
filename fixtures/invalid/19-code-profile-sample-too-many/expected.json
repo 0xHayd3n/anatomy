@@ -1,0 +1,5 @@
+{
+  "errors": [
+    { "instancePath": "/code_profile/commands/sample", "rule": "maxItems" }
+  ]
+}

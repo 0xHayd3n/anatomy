@@ -1,0 +1,65 @@
+anatomy_version = "0.1"
+description = "An HTTP service exposing text-embedding inference. Loads a sentence-transformer\nmodel on startup and exposes a single /embed endpoint for batch encoding.\n"
+
+[identity]
+fingerprint = "26jackqvb081dtt28dkv"
+
+[identity.stack]
+id = "python"
+hash = "26jac"
+
+[identity.form]
+id = "service"
+hash = "kqvb0"
+
+[identity.domain]
+id = "machine-learning"
+hash = "81dtt"
+
+[identity.function]
+id = "embedding-inference-api"
+hash = "28dkv"
+
+[[operation.entry_points]]
+path = "app/main.py"
+role = "service-main"
+
+[operation.commands]
+install = "uv sync"
+test = "uv run pytest"
+run = "uv run uvicorn app.main:app --reload"
+lint = "uv run ruff check"
+
+[operation.conventions]
+style = "ruff strict"
+commits = "conventional-commits"
+
+[[substance.key_dependencies]]
+name = "fastapi"
+why = "HTTP framework"
+
+[[substance.key_dependencies]]
+name = "sentence-transformers"
+why = "embedding model loading + inference"
+
+[[substance.key_dependencies]]
+name = "uvicorn"
+why = "ASGI server"
+
+[[substance.capabilities]]
+phrase = "batch text embedding via /embed endpoint"
+
+[[substance.capabilities]]
+phrase = "GPU acceleration when CUDA available"
+
+[[substance.limitations]]
+phrase = "model loaded fully into memory at startup"
+
+[[substance.limitations]]
+phrase = "no streaming output — full response per request"
+
+[generated]
+at = 2026-05-05T14:31:00.000Z
+by = "anatomy-cli@0.0.1"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

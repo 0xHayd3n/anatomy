@@ -1,0 +1,27 @@
+anatomy_version = "0.1"
+description = "This is a deliberately overlong description used as a conformance fixture for the\n\"description-too-long\" validator warning. It exists to confirm that validator\nimplementations emit a warning (not an error) when the description field exceeds\n500 characters. The schema accepts the file unconditionally because JSON Schema\nlength checks via maxLength would error rather than warn — and warnings are not\nrepresentable as JSON Schema errors. The validator package adds the length-check\non top of schema validation. By including this case in the conformance suite,\nboth the TypeScript and Rust validator implementations surface the warning\nconsistently. Padding ends here, but the warning still must surface.\n"
+
+[identity]
+fingerprint = "a8fybpwcf2v06pscnp3a"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "library"
+hash = "pwcf2"
+
+[identity.domain]
+id = "data-processing"
+hash = "v06ps"
+
+[identity.function]
+id = "csv-streaming-parser"
+hash = "cnp3a"
+
+[generated]
+at = 2026-05-05T14:50:00.000Z
+by = "anatomy-cli@0.0.1"
+model = "none"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

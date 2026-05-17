@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "code": "description-too-long",
+      "field": "description",
+      "comment": "Description field exceeds 500 chars; validator must emit a warning. Schema does not enforce this — the validator package owns this rule."
+    }
+  ]
+}

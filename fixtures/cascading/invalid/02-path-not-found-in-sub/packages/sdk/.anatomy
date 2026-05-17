@@ -1,0 +1,32 @@
+anatomy_version = "0.2"
+tagline = "sub-anatomy with missing path"
+
+[identity]
+fingerprint = "jtambp6hxrfyp3jyrgz1"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "typescript-library"
+hash = "p6hxr"
+
+[identity.domain]
+id = "developer-tools"
+hash = "fyp3j"
+
+[identity.function]
+id = "demo-sdk-2"
+hash = "yrgz1"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[[structure.entries]]
+path = "missing-dir/"
+purpose = "doesn't exist"
+kind = "source"

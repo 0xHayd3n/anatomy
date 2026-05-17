@@ -1,0 +1,16 @@
+anatomy_version = "0.10"
+tagline = "Memory-surfacing fixture"
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "memory"
+fingerprint = "kh3ybxthmht0yvvskye5"
+
+[generated]
+at = 2026-05-13T12:00:00.000Z
+commit = "abc8888"
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.10/schema.json"

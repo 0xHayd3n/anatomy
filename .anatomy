@@ -1,0 +1,153 @@
+anatomy_version = "0.13"
+tagline = "TOML + memory format that lets AI agents cite repo-specific rules/decisions and detect their own staleness."
+description = "Monorepo for the Anatomy standard: the TOML spec for `.anatomy` repository-metadata files (organized along four pillars — Stack, Form, Domain, Function) plus an append-only `.anatomy-memory` companion for lived experience, the `@anatomy/cli` tool (validate, generate, MCP server), the `@anatomy/validate` library, a Claude Code consumer plugin, and the conformance fixture suite — together giving AI agents a citable per-repo knowledge surface that pins to a git commit so consumers can detect drift. Empirically (2026-05-09 N=3 cross-repo eval, docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md): treatment cites .anatomy rules/memory entries in 89% of trials vs 0% baseline, surfaces system-level facts that don't grep cleanly, and pays a citation-overhead wall-clock cost that's worth it for cross-file synthesis tasks but not for grep-friendly lookups."
+
+[identity]
+stack = "javascript"
+form = "monorepo"
+domain = "repo-metadata"
+function = "ai-context-format"
+fingerprint = "jcevybzm4r897e6rhe11"
+
+
+[operation.commands]
+validate = "node scripts/validate-spec.mjs"
+test = "npm run validate"
+
+[[structure.entries]]
+path = "anatomy-cli/"
+purpose = "@anatomy/cli — validate, generate (Pass 1 deterministic + optional Pass 2 AI fill), show, migrate, rehash, memory, mcp"
+kind = "source"
+
+[[structure.entries]]
+path = "anatomy-validate/"
+purpose = "@anatomy/validate — version-routed JSON-schema validator, fingerprint/hash/path checks, cascading tree discovery"
+kind = "source"
+
+[[structure.entries]]
+path = "anatomy-consumer.plugin/"
+purpose = "Claude Code plugin — .claude-plugin/plugin.json wires SessionStart hook + MCP server; installable via /plugin install"
+kind = "source"
+
+[[structure.entries]]
+path = "spec/"
+purpose = "Normative spec: per-version schema.json + v0.2-frozen canonicalization, versioning policy, recommended-stacks"
+kind = "docs"
+
+[[structure.entries]]
+path = "fixtures/"
+purpose = "Conformance test set: valid/invalid/with-warnings .anatomy fixtures + canonicalization-cases.json for validators"
+kind = "tests"
+
+[[structure.entries]]
+path = "scripts/"
+purpose = "Spec-package scripts: validate-spec.mjs (content-integrity), canonical.mjs (normative algorithm), fix-fixture-hashes.mjs"
+kind = "scripts"
+
+[[structure.entries]]
+path = "docs/"
+purpose = "Design docs and superpowers plans/specs — chronological per-version design rationale and implementation plans"
+kind = "docs"
+
+[[structure.entries]]
+path = "eval/"
+purpose = "A/B harness measuring whether the anatomy consumer (hook + MCP) helps Claude Code agents — 6 fixed tasks with rubric"
+kind = "tests"
+
+[environment]
+language_version = ">=22"
+runtime = "node"
+
+[[rules]]
+rule = "Schema additions within a major version must be additive — consumers reading anatomy_version = X must accept later X.Y files without modification"
+why = "spec/0.2/versioning-policy.md is normative for all v0.x; consumer-side breakage forces simultaneous upgrades"
+
+[[rules]]
+rule = "spawnSync calls to git or external CLIs must pass shell: true on Windows for .cmd shim resolution"
+why = "memory entry t9ykw3em — npm-installed CLIs don't resolve as plain executables on Windows"
+verify = { kind = "semgrep", rule_file = ".semgrep/spawn-without-shell-true.yml", forbid_in = "anatomy-cli/src/**/*.ts" }
+
+[[rules]]
+rule = "Hand-roll TOML output when section order matters; do not use smol-toml.stringify"
+why = "smol-toml does not preserve insertion order; section order is normative per spec section 5"
+
+[[rules]]
+rule = "Tests live in {package}/tests/ and are named *.test.ts"
+why = "established convention across anatomy-cli and anatomy-validate; vitest globs depend on it"
+verify = { kind = "glob_exists", path = "anatomy-cli/tests/*.test.ts" }
+
+[[rules]]
+rule = "Per-version schema docs live in spec/{ver}/; canonicalization, versioning policy, and recommended-stacks remain at spec/0.2/ until explicitly superseded"
+why = "spec/CURRENT.md is the normative version index — implementers rely on the freeze"
+
+[[rules]]
+rule = "Do not add fields that an LLM can re-derive from source; reserve schema slots for uncapturable human knowledge"
+why = "v0.7 dropped [[insights]] for this reason — derivable fields rot fast and bloat AI context"
+
+[[rules]]
+rule = "All validate() checks return { errors, warnings } — never throw"
+why = "consumers compose checks; throws would break batch validation and cascading"
+
+[[flows]]
+name = "generate-pipeline"
+summary = "Pass 1 deterministic (manifest + README + dir walker) → optional Pass 2 (Claude CLI fills domain/function/purposes/rules/flows/decisions) → renderToml → atomic write"
+
+[[flows]]
+name = "validate-pipeline"
+summary = "TOML parse → version-routed schema → fingerprint check (v0.7=fingerprintFromPillars; v0.1-0.6=per-pillar-hash concat) → path checks → cascading discovery (v0.3+) → return errors+warnings"
+
+[[flows]]
+name = "mcp-request-pipeline"
+summary = "resolveAnatomy (find + parse + staleness vs HEAD) → tool handler → wrap in envelope (anatomy_path, staleness, repo_fingerprint, data) → record telemetry to ~/.anatomy/telemetry.jsonl"
+
+[[flows]]
+name = "memory-append"
+summary = "anatomy add <kind> <topic> <content> → generate Crockford-base32 id → infer attribution (claude-session vs human:user) → append [[entries]] block; never rewrite existing entries"
+
+[[decisions]]
+topic = "v0.7 drops derivable metadata"
+reason = "Schema additions should capture uncapturable human knowledge (rules/flows/decisions), not metadata an LLM can re-extract from source on every read — the v0.7 lesson when [[insights]] and [[architecture.invariants]] were dropped. Detail: memory entries s4z6f6xz, 1m3714zm."
+
+[[decisions]]
+topic = "v0.7 flattens identity to plain string pillars"
+reason = "Per-pillar hashes were a fingerprint-construction implementation detail leaking into the schema. v0.7 uses four plain strings plus a single fingerprint via fingerprintFromPillars (SHA-256 of stack\\0form\\0domain\\0function, base32, first 20 chars). See memory entries kjj9dpxw, 5barj9az."
+
+[[decisions]]
+topic = "v0.3 is an ecosystem release, not a wire version"
+reason = "v0.3 added cascading discovery + merge semantics for multi-.anatomy repos but did not change the per-file format. Files in v0.3 cascades declare anatomy_version = '0.2'. There is no '0.3' wire version. See spec/CURRENT.md and spec/0.3/cascading.md."
+
+[[decisions]]
+topic = "Hand-rolled TOML renderer in anatomy-cli"
+reason = "smol-toml.stringify does not preserve insertion order, but section order is normative per spec section 5 and load-bearing for human readability. anatomy-cli/src/render/toml.ts emits sections in canonical order with explicit blank-line spacing. Memory entry m0jnp3kq."
+
+[[decisions]]
+topic = "Removed Pass 1 code-intelligence module"
+reason = "An earlier Pass 1 had import-graph-hub detection, enum/singleton inference, and similar static analysis. Removed in commit ec73e00 — this was the wrong direction; Claude derives such structure from reading source already, so storing it duplicated context and rotted faster than the code. Memory entry et5gth9k."
+
+[[decisions]]
+topic = "v0.8 finishes the v0.7 cleanup"
+reason = "Removed code_profile (already dead surface — Pass 1 generator gone since ec73e00) and substance.capabilities/limitations (derivable from source). Schema now matches the v0.7 principle stated in memory entry et5gth9k and rule 'Do not add fields that an LLM can re-derive from source'. Identity/fingerprint formula unchanged from v0.7."
+
+[[decisions]]
+topic = "[substance] is for why-annotated dependencies only"
+reason = "v0.8 narrows [substance] to its key_dependencies sub-section. Capabilities and limitations were either re-derivable on every read or, when they encoded a deliberate choice, belonged in [[decisions]] proper. The phrase_with_source $def was orphaned and dropped at the same time."
+
+[generate]
+cursor_mdc = true
+cursor_rules = true
+aider_conventions = true
+cline_rules = true
+roo_rules = true
+continue_rules = true
+windsurf_rules = true
+agents_md_budget = 3500
+agents_md_memory_count = 6
+render_budget = 3500
+render_memory_count = 6
+
+[generated]
+at = 2026-05-17T04:53:13.000Z
+commit = "948fe0b"
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

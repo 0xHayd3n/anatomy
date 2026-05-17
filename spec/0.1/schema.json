@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/0.1/schema.json",
+  "title": "Anatomy",
+  "description": "Schema for .anatomy files (v0.1). Validation runs against the TOML file's parsed JSON-equivalent object model.",
+  "type": "object",
+  "required": ["anatomy_version", "description", "identity", "generated"],
+  "additionalProperties": false,
+  "properties": {
+    "anatomy_version": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identity":  { "$ref": "#/$defs/identity" },
+    "generated": { "$ref": "#/$defs/generated" },
+    "operation": { "$ref": "#/$defs/operation" },
+    "substance": { "$ref": "#/$defs/substance" }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "required": ["stack", "form", "domain", "function", "fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "stack":    { "$ref": "#/$defs/pillar" },
+        "form":     { "$ref": "#/$defs/pillar" },
+        "domain":   { "$ref": "#/$defs/pillar" },
+        "function": { "$ref": "#/$defs/pillar" },
+        "fingerprint": { "type": "string", "pattern": "^[a-z0-9]{20}$" }
+      }
+    },
+    "pillar": {
+      "type": "object",
+      "required": ["id", "hash"],
+      "additionalProperties": false,
+      "properties": {
+        "id":   { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "hash": { "type": "string", "pattern": "^[a-z0-9]{5}$" }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "required": ["at", "by", "model", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "at":     { "type": "string", "format": "date-time" },
+        "by":     { "type": "string", "minLength": 1 },
+        "model":  { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "format": "uri" }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entry_points": {
+          "type": "array",
+          "maxItems": 10,
+          "items":    { "$ref": "#/$defs/entry_point" }
+        },
+        "commands": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "maxProperties": 25
+        },
+        "conventions": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxProperties": 15
+        }
+      }
+    },
+    "entry_point": {
+      "type": "object",
+      "required": ["path", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "path":        { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
+    "substance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key_dependencies": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/key_dependency" }
+        },
+        "capabilities": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/phrase_with_source" }
+        },
+        "limitations": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "#/$defs/phrase_with_source" }
+        }
+      }
+    },
+    "key_dependency": {
+      "type": "object",
+      "required": ["name", "why"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
+    "phrase_with_source": {
+      "type": "object",
+      "required": ["phrase"],
+      "additionalProperties": false,
+      "properties": {
+        "phrase": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "source": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    }
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/0.7/schema.json",
+  "title": "Anatomy",
+  "description": "Schema for .anatomy files (v0.7). Flat identity pillars; replaces insights+architecture with rules, flows, decisions.",
+  "type": "object",
+  "required": ["anatomy_version", "tagline", "identity", "generated"],
+  "additionalProperties": false,
+  "properties": {
+    "anatomy_version": { "type": "string", "const": "0.7" },
+    "tagline":     { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "identity":    { "$ref": "#/$defs/identity" },
+    "generated":   { "$ref": "#/$defs/generated" },
+    "operation":   { "$ref": "#/$defs/operation" },
+    "substance":   { "$ref": "#/$defs/substance" },
+    "structure":   { "$ref": "#/$defs/structure" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "interface":   { "$ref": "#/$defs/interface" },
+    "domain_model":{ "$ref": "#/$defs/domain_model" },
+    "code_profile":{ "$ref": "#/$defs/code_profile" },
+    "rules": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "flows": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/flow" }
+    },
+    "decisions": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/decision" }
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "required": ["stack", "form", "domain", "function", "fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "stack":       { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "form":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "domain":      { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "function":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "fingerprint": { "type": "string", "pattern": "^[a-z0-9]{20}$" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["rule"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "why":  { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "required": ["name", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "name":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["topic", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "topic":  { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "required": ["at", "by", "model", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "at":     { "type": "string", "format": "date-time" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,12}$" },
+        "by":     { "type": "string", "minLength": 1 },
+        "model":  { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "format": "uri" }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entry_points": {
+          "type": "array", "maxItems": 10,
+          "items": { "$ref": "#/$defs/entry_point" }
+        },
+        "commands": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)?$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "maxProperties": 25
+        },
+        "conventions": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxProperties": 15
+        }
+      }
+    },
+    "entry_point": {
+      "type": "object",
+      "required": ["path", "role"],
+      "additionalProperties": false,
+      "not": { "required": ["description", "purpose"] },
+      "properties": {
+        "path":        { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "purpose":     { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "substance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key_dependencies": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/key_dependency" } },
+        "capabilities":     { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/phrase_with_source" } },
+        "limitations":      { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/phrase_with_source" } }
+      }
+    },
+    "key_dependency": {
+      "type": "object", "required": ["name", "why"], "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+      }
+    },
+    "phrase_with_source": {
+      "type": "object", "required": ["phrase"], "additionalProperties": false,
+      "properties": {
+        "phrase": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "source": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 256 },
+            {
+              "type": "object", "required": ["path", "symbol"], "additionalProperties": false,
+              "properties": {
+                "path":   { "type": "string", "minLength": 1, "maxLength": 256 },
+                "symbol": { "type": "string", "minLength": 1, "maxLength": 200 }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "structure": {
+      "type": "object", "additionalProperties": false, "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["path", "purpose", "kind"], "additionalProperties": false,
+            "properties": {
+              "path":       { "type": "string", "minLength": 1, "maxLength": 256 },
+              "purpose":    { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+              "kind":       { "enum": ["source", "tests", "docs", "config", "build", "scripts", "examples", "generated", "other"] },
+              "convention": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "anyOf": [
+        { "required": ["language_version"] }, { "required": ["runtime"] },
+        { "required": ["os"] }, { "required": ["required_services"] }, { "required": ["required_env"] }
+      ],
+      "properties": {
+        "language_version": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "runtime": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "os": {
+          "oneOf": [
+            { "type": "array", "items": { "const": "any" }, "minItems": 1, "maxItems": 1 },
+            { "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["linux", "macos", "windows", "freebsd"] } }
+          ]
+        },
+        "required_services": {
+          "type": "array", "minItems": 1, "maxItems": 10,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        },
+        "required_env": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        }
+      }
+    },
+    "interface": {
+      "type": "object", "additionalProperties": false,
+      "oneOf": [
+        { "required": ["exports"] }, { "required": ["endpoints"] }, { "required": ["subcommands"] }
+      ],
+      "properties": {
+        "exports": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["symbol", "kind", "summary"], "additionalProperties": false,
+            "properties": {
+              "symbol":    { "type": "string", "minLength": 1, "maxLength": 120 },
+              "kind":      { "enum": ["function", "class", "type", "constant", "namespace", "trait"] },
+              "summary":   { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+              "signature": { "type": "string", "minLength": 1, "maxLength": 200 }
+            }
+          }
+        },
+        "endpoints": {
+          "type": "array", "minItems": 1, "maxItems": 50,
+          "items": {
+            "type": "object", "required": ["method", "path", "summary"], "additionalProperties": false,
+            "properties": {
+              "method":  { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "WS", "GRPC", "OTHER"] },
+              "path":    { "type": "string", "minLength": 1, "maxLength": 200 },
+              "summary": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        },
+        "subcommands": {
+          "type": "array", "minItems": 1, "maxItems": 30,
+          "items": {
+            "type": "object", "required": ["name", "summary"], "additionalProperties": false,
+            "properties": {
+              "name":    { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "summary": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "domain_model": {
+      "type": "object", "additionalProperties": false, "required": ["entities"],
+      "properties": {
+        "entities": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["name", "summary"], "additionalProperties": false,
+            "properties": {
+              "name":    { "type": "string", "minLength": 1, "maxLength": 80 },
+              "summary": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "code_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        { "required": ["components"] }, { "required": ["commands"] },
+        { "required": ["endpoints"] },  { "required": ["exports"] }
+      ],
+      "properties": {
+        "components": { "$ref": "#/$defs/code_profile_components" },
+        "commands":   { "$ref": "#/$defs/code_profile_commands" },
+        "endpoints":  { "$ref": "#/$defs/code_profile_endpoints" },
+        "exports":    { "$ref": "#/$defs/code_profile_exports" }
+      }
+    },
+    "code_profile_components": {
+      "type": "object", "additionalProperties": false, "required": ["count"],
+      "properties": {
+        "count":   { "type": "integer", "minimum": 0 },
+        "styling": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "sample":  { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 80 } }
+      }
+    },
+    "code_profile_commands": {
+      "type": "object", "additionalProperties": false, "required": ["count"],
+      "properties": {
+        "count":     { "type": "integer", "minimum": 0 },
+        "max_depth": { "type": "integer", "minimum": 2, "maximum": 10 },
+        "sample":    { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 80 } }
+      }
+    },
+    "code_profile_endpoints": {
+      "type": "object", "additionalProperties": false, "required": ["count"],
+      "properties": {
+        "count":       { "type": "integer", "minimum": 0 },
+        "auth_scheme": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "sample":      { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 80 } }
+      }
+    },
+    "code_profile_exports": {
+      "type": "object", "additionalProperties": false, "required": ["count"],
+      "properties": {
+        "count":  { "type": "integer", "minimum": 0 },
+        "sample": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 80 } }
+      }
+    }
+  }
+}

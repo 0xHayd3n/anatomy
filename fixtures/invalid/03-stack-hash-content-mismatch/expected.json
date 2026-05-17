@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "schema_can_detect": false,
+  "validator_code": "hash-content-mismatch",
+  "validator_must_detect": "hash field does not equal SHA-256(canonical(id))[0:5] in lowercase Crockford-base32",
+  "comment": "Schema enforces hash format only; cross-field hash content equality is the validator's responsibility. The validator surfaces a 'hash-content-mismatch' error."
+}

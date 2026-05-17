@@ -1,0 +1,64 @@
+anatomy_version = "0.8"
+tagline = "Full v0.8 test fixture exercising all optional sections"
+description = "Multi-section v0.8 fixture used for conformance. Demonstrates that operation, substance (key_dependencies only), structure, environment, interface, domain_model, rules, flows, and decisions can all coexist."
+
+[identity]
+stack = "typescript"
+form = "library"
+domain = "developer-tools"
+function = "anatomy-format-validator"
+fingerprint = "52s6gcpyaea4mden20hj"
+
+[[operation.entry_points]]
+path = "src/index.ts"
+role = "library-root"
+purpose = "public API surface"
+
+[operation.commands]
+build = "tsc"
+test = "vitest"
+
+[[substance.key_dependencies]]
+name = "ajv"
+why = "JSON Schema 2020-12 validator"
+
+[[structure.entries]]
+path = "src/"
+purpose = "library source"
+kind = "source"
+
+[[structure.entries]]
+path = "tests/"
+purpose = "vitest unit + integration"
+kind = "tests"
+
+[environment]
+language_version = ">=22"
+runtime = "node"
+
+[[interface.exports]]
+symbol = "validate"
+kind = "function"
+summary = "Parse and validate a .anatomy text"
+
+[[domain_model.entities]]
+name = "AnatomyDoc"
+summary = "Parsed and version-routed .anatomy document"
+
+[[rules]]
+rule = "All checks must return { errors, warnings } — never throw"
+why = "consumers compose checks; throws would break batch validation"
+
+[[flows]]
+name = "validate-pipeline"
+summary = "TOML parse → version-routed schema → fingerprint check → path checks → return errors+warnings"
+
+[[decisions]]
+topic = "Hand-rolled TOML renderer in anatomy-cli"
+reason = "smol-toml.stringify does not preserve insertion order; section order is normative per spec section 5"
+
+[generated]
+at = 2026-05-08T00:00:00.000Z
+by = "anatomy-cli@0.10.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.8/schema.json"

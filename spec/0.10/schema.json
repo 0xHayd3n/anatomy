@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/0.10/schema.json",
+  "title": "Anatomy",
+  "description": "Schema for .anatomy files (v0.10). Additive over v0.9: adds optional [generate] top-level section for per-repo render preferences (AGENTS.md emission, token budget, memory count). All [generate] fields are optional with defaults; v0.9 files migrate to v0.10 with no data change. The optional section conforms to the 'no derivable fields' rule — it holds per-repo human choices about rendering, not content an LLM could re-derive from source.",
+  "type": "object",
+  "required": ["anatomy_version", "tagline", "identity", "generated"],
+  "additionalProperties": false,
+  "properties": {
+    "anatomy_version": { "type": "string", "const": "0.10" },
+    "tagline":     { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "identity":    { "$ref": "#/$defs/identity" },
+    "generated":   { "$ref": "#/$defs/generated" },
+    "generate":    { "$ref": "#/$defs/generate" },
+    "operation":   { "$ref": "#/$defs/operation" },
+    "structure":   { "$ref": "#/$defs/structure" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "rules": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "flows": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/flow" }
+    },
+    "decisions": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/decision" }
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "required": ["stack", "form", "domain", "function", "fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "stack":       { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "form":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "domain":      { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "function":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "fingerprint": { "type": "string", "pattern": "^[a-z0-9]{20}$" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["rule"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "why":  { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "required": ["name", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "name":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["topic", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "topic":  { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "required": ["at", "by", "model", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "at":     { "type": "string", "format": "date-time" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,12}$" },
+        "by":     { "type": "string", "minLength": 1 },
+        "model":  { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "format": "uri" }
+      }
+    },
+    "generate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-repo render preferences. All fields optional with defaults. Holds human choice (uncapturable), not derivable content.",
+      "properties": {
+        "agents_md": {
+          "type": "boolean",
+          "description": "Emit AGENTS.md on `anatomy render` (default true)."
+        },
+        "agents_md_budget": {
+          "type": "integer",
+          "minimum": 500,
+          "description": "Token cap for the emitted AGENTS.md (default 1500)."
+        },
+        "agents_md_memory_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Max recent-memory entries surfaced in AGENTS.md (default 10)."
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entry_points": {
+          "type": "array", "maxItems": 10,
+          "items": { "$ref": "#/$defs/entry_point" }
+        },
+        "commands": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)?$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "maxProperties": 25
+        },
+        "conventions": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxProperties": 15
+        }
+      }
+    },
+    "entry_point": {
+      "type": "object",
+      "required": ["path", "role"],
+      "additionalProperties": false,
+      "not": { "required": ["description", "purpose"] },
+      "properties": {
+        "path":        { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "purpose":     { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "structure": {
+      "type": "object", "additionalProperties": false, "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["path", "purpose", "kind"], "additionalProperties": false,
+            "properties": {
+              "path":       { "type": "string", "minLength": 1, "maxLength": 256 },
+              "purpose":    { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+              "kind":       { "enum": ["source", "tests", "docs", "config", "build", "scripts", "examples", "generated", "other"] },
+              "convention": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "anyOf": [
+        { "required": ["language_version"] }, { "required": ["runtime"] },
+        { "required": ["os"] }, { "required": ["required_services"] }, { "required": ["required_env"] }
+      ],
+      "properties": {
+        "language_version": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "runtime": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "os": {
+          "oneOf": [
+            { "type": "array", "items": { "const": "any" }, "minItems": 1, "maxItems": 1 },
+            { "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["linux", "macos", "windows", "freebsd"] } }
+          ]
+        },
+        "required_services": {
+          "type": "array", "minItems": 1, "maxItems": 10,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        },
+        "required_env": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

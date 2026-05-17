@@ -1,0 +1,19 @@
+anatomy_version = "0.13"
+tagline = "v0.13 invalid: lang must be in the supported enum."
+
+[identity]
+stack = "haskell"
+form = "library"
+domain = "demo"
+function = "verify-test"
+fingerprint = "k19gej08j3rdf212adm5"
+
+[[rules]]
+rule = "Functions must be pure."
+verify = { kind = "semgrep", lang = "haskell", pattern = "main", forbid_in = "src/**/*.hs" }
+
+[generated]
+at = 2026-05-14T00:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

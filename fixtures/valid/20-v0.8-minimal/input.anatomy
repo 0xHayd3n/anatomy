@@ -1,0 +1,15 @@
+anatomy_version = "0.8"
+tagline = "Minimal v0.8 test fixture"
+
+[identity]
+stack = "typescript"
+form = "cli-tool"
+domain = "developer-tools"
+function = "config-validator"
+fingerprint = "mx6z2zvcrwmye5tfa3cq"
+
+[generated]
+at = 2026-05-08T00:00:00.000Z
+by = "anatomy-cli@0.10.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.8/schema.json"

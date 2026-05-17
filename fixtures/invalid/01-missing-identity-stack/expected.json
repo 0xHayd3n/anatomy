@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "instancePath": "/identity",
+      "rule": "required",
+      "params": { "missingProperty": "stack" }
+    }
+  ]
+}

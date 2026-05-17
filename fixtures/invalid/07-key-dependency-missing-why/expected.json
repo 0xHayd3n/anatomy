@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "instancePath": "/substance/key_dependencies/0",
+      "rule": "required",
+      "params": { "missingProperty": "why" }
+    }
+  ]
+}

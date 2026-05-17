@@ -1,0 +1,5 @@
+dist/
+src/types.generated.ts
+src/schema.json
+src/schema-*.json
+node_modules/

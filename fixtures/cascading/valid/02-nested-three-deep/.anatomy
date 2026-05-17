@@ -1,0 +1,27 @@
+anatomy_version = "0.2"
+tagline = "three-deep root"
+
+[identity]
+fingerprint = "jtambq05v2gzs946m38a"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "monorepo-root"
+hash = "q05v2"
+
+[identity.domain]
+id = "ai-assistant"
+hash = "gzs94"
+
+[identity.function]
+id = "personal-ai-gateway-root"
+hash = "6m38a"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"

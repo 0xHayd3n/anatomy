@@ -1,0 +1,19 @@
+anatomy_version = "0.13"
+tagline = "v0.13 invalid: rule_file must end in .yml or .yaml."
+
+[identity]
+stack = "typescript"
+form = "library"
+domain = "demo"
+function = "verify-test"
+fingerprint = "ard71he7df1dz73x6b3v"
+
+[[rules]]
+rule = "Repositories must mediate all DB access."
+verify = { kind = "semgrep", rule_file = ".semgrep/no-direct-orm.txt", expect_in = "src/repositories/**/*.ts" }
+
+[generated]
+at = 2026-05-14T00:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

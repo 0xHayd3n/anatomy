@@ -1,0 +1,5 @@
+{
+  "errors": [
+    { "instancePath": "/architecture/invariants/0/rule", "rule": "maxLength" }
+  ]
+}

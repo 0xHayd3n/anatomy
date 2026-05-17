@@ -1,0 +1,48 @@
+{
+  "name": "@anatomy/validate",
+  "version": "1.0.0",
+  "description": "Validator for .anatomy and .anatomy-memory files. Routes wire versions 0.1, 0.2, 0.4–0.15, and 1.0 (v1.0 == v0.15 structurally; the 0→1 bump is a stability commitment) + v0.3 cascading semantics. Identity-integrity is version-aware (v0.7+ flat-pillar fingerprintFromPillars; v0.1–v0.6 per-pillar-hash concat). Path checks: structure-path, source-path, nested-path-escape, interface↔form (v0.7–v0.8). Soft warnings: description-too-long, entry-point-alias, commands-no-test (v0.4+). Source cross-check: unused-dependency-claim + literal-not-in-source. Tree-mode: validateTree, findAnatomyForPath, discoverAllAnatomies, duplicate-fingerprint-in-tree. Memory pipeline: validateMemory + memory-fingerprint + memory-supersession + memory-dangling-ref.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepare": "npm run build",
+    "prebuild": "node scripts/prebuild.mjs",
+    "pretest": "node scripts/prebuild.mjs",
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.0",
+    "smol-toml": "^1.3.0"
+  },
+  "optionalDependencies": {
+    "@ast-grep/napi": "^0.42.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "json-schema-to-typescript": "^15.0.4",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "schema_can_detect": false,
+  "validator_code": "interface-form-mismatch",
+  "validator_must_detect": "form id 'cli-tool' contains 'cli'; the only valid [interface] variant is 'subcommands'",
+  "comment": "Schema's oneOf accepts 'endpoints' as a structurally valid variant when present alone; the form↔variant tiebreak (top-to-bottom, first match wins per spec §7.2) is enforced by the validator. anatomy-spec's harness only checks shape; this fixture documents the boundary for the validator's conformance suite."
+}

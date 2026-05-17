@@ -1,0 +1,29 @@
+anatomy_version = "0.2"
+tagline = "[environment] declared but has no populated sub-fields"
+
+[identity]
+fingerprint = "00000000000000000000"
+
+[identity.stack]
+id = "rust"
+hash = "00000"
+
+[identity.form]
+id = "cli-tool"
+hash = "00000"
+
+[identity.domain]
+id = "web-publishing"
+hash = "00000"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "00000"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.2.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[environment]

@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "code": "commands-no-test",
+      "field": "operation.commands",
+      "comment": "v0.4+ doc declares [operation.commands] but the table has no 'test' key. Validator must emit a soft warning nudging maintainers to document how to run the project's test suite. v0.1/v0.2/v0.3 are skipped — the recommendation only applies once operation.commands became a v0.4 norm."
+    }
+  ]
+}

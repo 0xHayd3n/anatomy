@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build / cache
+dist/
+.cache/
+coverage/
+.claude/
+
+# Eval — generated artifacts (baseline is tracked)
+eval/promptfoo/
+eval/citation-tasks/*.rendered.md
+eval/results/citation-2*.json
+
+# Eval run scratch (clones + raw artifacts)
+.test-runs/

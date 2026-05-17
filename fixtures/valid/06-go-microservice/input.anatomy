@@ -1,0 +1,58 @@
+anatomy_version = "0.1"
+description = "A small Kubernetes controller that watches event objects across a cluster\nand forwards interesting ones to a configurable webhook. Designed for SRE\nalert enrichment workflows.\n"
+
+[identity]
+fingerprint = "9k8e4kqvb0nbk2pnr2ze"
+
+[identity.stack]
+id = "go"
+hash = "9k8e4"
+
+[identity.form]
+id = "service"
+hash = "kqvb0"
+
+[identity.domain]
+id = "devops"
+hash = "nbk2p"
+
+[identity.function]
+id = "kubernetes-event-watcher"
+hash = "nr2ze"
+
+[[operation.entry_points]]
+path = "cmd/watcher/main.go"
+role = "service-main"
+
+[operation.commands]
+build = "go build ./..."
+test = "go test ./..."
+run = "go run ./cmd/watcher"
+lint = "golangci-lint run"
+
+[operation.conventions]
+style = "gofmt + golangci-lint"
+commits = "conventional-commits"
+
+[[substance.key_dependencies]]
+name = "k8s.io/client-go"
+why = "Kubernetes API client"
+
+[[substance.key_dependencies]]
+name = "k8s.io/apimachinery"
+why = "Kubernetes type definitions"
+
+[[substance.capabilities]]
+phrase = "cluster-wide event watch with field-selector filters"
+
+[[substance.capabilities]]
+phrase = "configurable webhook payload shape"
+
+[[substance.limitations]]
+phrase = "single-cluster scope (no multi-cluster aggregation)"
+
+[generated]
+at = 2026-05-05T14:32:00.000Z
+by = "anatomy-cli@0.0.1"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

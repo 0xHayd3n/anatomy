@@ -1,0 +1,27 @@
+anatomy_version = "0.2"
+tagline = "apps directory overview"
+
+[identity]
+fingerprint = "jtambdjrh8gzs94v42js"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "apps-collection"
+hash = "djrh8"
+
+[identity.domain]
+id = "ai-assistant"
+hash = "gzs94"
+
+[identity.function]
+id = "client-apps-overview"
+hash = "v42js"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"

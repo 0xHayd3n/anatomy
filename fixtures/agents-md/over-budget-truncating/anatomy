@@ -1,0 +1,57 @@
+anatomy_version = "0.10"
+tagline = "Over-budget fixture exercising decision-reason truncation"
+description = "AGENTS.md fixture with [generate].agents_md_budget set tight enough that decision reasons need first-sentence truncation to fit."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "budgeted"
+fingerprint = "kh3ybxthmht0yvvskye4"
+
+[generate]
+agents_md_budget = 500
+agents_md_memory_count = 5
+
+[operation.commands]
+test = "vitest run"
+
+[[structure.entries]]
+path = "src/"
+purpose = "Source root"
+kind = "source"
+
+[[rules]]
+rule = "Tests live in tests/"
+why = "convention"
+
+[[decisions]]
+topic = "First decision"
+reason = "First sentence. Second sentence with much more bulk that will be truncated. Third sentence that pads out the reason field significantly."
+
+[[decisions]]
+topic = "Second decision"
+reason = "First sentence again. Second sentence again with more padding to push the rendered output over the budget threshold deliberately."
+
+[[decisions]]
+topic = "Third decision"
+reason = "First sentence three. Second sentence three with even more padding and trailing words just to make sure the budget is exceeded."
+
+[[decisions]]
+topic = "Fourth decision"
+reason = "First sentence four. Second sentence four padding the reason. Third sentence four also padding to push the file decisively over the configured budget threshold."
+
+[[decisions]]
+topic = "Fifth decision"
+reason = "First sentence five. Second sentence five padding even more. Third sentence five adding bulk. Fourth sentence five trailing tail tokens for budget exhaustion."
+
+[[decisions]]
+topic = "Sixth decision"
+reason = "First sentence six. Second sentence six padding still further. Third sentence six finishing the bulk. Fourth sentence six adds the last padding push needed."
+
+[generated]
+at = 2026-05-13T12:00:00.000Z
+commit = "abc9999"
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.10/schema.json"

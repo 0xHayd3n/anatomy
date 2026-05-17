@@ -1,0 +1,33 @@
+anatomy_version = "0.4"
+tagline = "v0.4 doc with [operation.commands] but no 'test' key — exercises commands-no-test warn."
+
+[identity]
+fingerprint = "a8fybpg4nh2b5vpw498v"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "web-publishing"
+hash = "2b5vp"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "w498v"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.4.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.4/schema.json"
+
+[operation.commands]
+install = "cargo build"
+run = "cargo run --bin blogger"
+lint = "cargo clippy -- -D warnings"
+format = "cargo fmt"

@@ -1,0 +1,9 @@
+{
+  "errors": [
+    {
+      "instancePath": "/operation/entry_points/0",
+      "rule": "required",
+      "params": { "missingProperty": "role" }
+    }
+  ]
+}

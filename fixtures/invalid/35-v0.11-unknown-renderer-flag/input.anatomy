@@ -1,0 +1,18 @@
+anatomy_version = "0.11"
+tagline = "Fixture: unknown [generate] flag should fail schema."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "minimal"
+fingerprint = "kh3ybxthmht0yvvskye2"
+
+[generate]
+nonexistent_renderer = true
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.11/schema.json"

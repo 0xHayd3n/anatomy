@@ -1,0 +1,64 @@
+anatomy_version = "0.10"
+tagline = "Comprehensive v0.10 example — all optional sections populated"
+description = "Comprehensive AGENTS.md fixture exercising commands, structure, rules, flows, and decisions within the default token budget."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "comprehensive"
+fingerprint = "kh3ybxthmht0yvvskye3"
+
+[operation.commands]
+build = "tsc"
+test = "vitest run"
+lint = "eslint ."
+
+[[structure.entries]]
+path = "src/"
+purpose = "Source code root"
+kind = "source"
+
+[[structure.entries]]
+path = "tests/"
+purpose = "Test suites"
+kind = "tests"
+
+[[structure.entries]]
+path = "docs/"
+purpose = "Documentation"
+kind = "docs"
+
+[environment]
+runtime = "node"
+
+[[rules]]
+rule = "All tests live in tests/ and are named *.test.ts"
+why = "Established convention; vitest globs depend on it"
+
+[[rules]]
+rule = "Hand-roll TOML when section order matters"
+why = "smol-toml does not preserve insertion order"
+
+[[flows]]
+name = "build-pipeline"
+summary = "tsc compilation followed by vitest run"
+
+[[flows]]
+name = "release"
+summary = "Bump version then publish to npm"
+
+[[decisions]]
+topic = "TypeScript over JavaScript"
+reason = "Type safety catches a class of bugs earlier in the cycle"
+
+[[decisions]]
+topic = "vitest over jest"
+reason = "Faster watch mode and native ESM support"
+
+[generated]
+at = 2026-05-13T12:00:00.000Z
+commit = "def5678"
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.10/schema.json"

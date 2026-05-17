@@ -1,0 +1,62 @@
+anatomy_version = "0.1"
+description = "A headless UI component library for React, providing accessible primitives\nwith no built-in styles. Consumers compose styled wrappers around the\nprimitives to fit their own design systems.\n"
+
+[identity]
+fingerprint = "jtambpwcf2qg7k0vfe95"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "library"
+hash = "pwcf2"
+
+[identity.domain]
+id = "ui-components"
+hash = "qg7k0"
+
+[identity.function]
+id = "react-headless-ui-kit"
+hash = "vfe95"
+
+[[operation.entry_points]]
+path = "src/index.ts"
+role = "library-root"
+
+[operation.commands]
+install = "pnpm install"
+build = "pnpm build"
+test = "pnpm test"
+lint = "pnpm lint"
+format = "pnpm format"
+
+[operation.conventions]
+style = "prettier + eslint strict"
+commits = "conventional-commits"
+
+[[substance.key_dependencies]]
+name = "react"
+why = "peer dep — primitives target React 18+"
+
+[[substance.key_dependencies]]
+name = "@radix-ui/react-primitive"
+why = "low-level a11y primitives this library composes over"
+
+[[substance.capabilities]]
+phrase = "fully accessible primitives (WCAG AA)"
+
+[[substance.capabilities]]
+phrase = "tree-shakeable per-component imports"
+
+[[substance.limitations]]
+phrase = "no built-in theme system"
+
+[[substance.limitations]]
+phrase = "React 17 and earlier not supported"
+
+[generated]
+at = 2026-05-05T14:30:00.000Z
+by = "anatomy-cli@0.0.1"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

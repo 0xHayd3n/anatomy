@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "results": [
+    { "relPath": ".anatomy", "ok": true, "errors": [], "warnings": [] },
+    { "relPath": "packages/copy/.anatomy", "ok": true, "errors": [], "warnings": [] }
+  ],
+  "crossFileWarnings": [
+    { "code": "duplicate-fingerprint-in-tree" }
+  ]
+}

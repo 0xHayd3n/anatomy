@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "anatomy": {
+      "command": "anatomy",
+      "args": ["mcp"]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+anatomy_version = "0.4"
+tagline = "A static site generator."
+
+[identity]
+fingerprint = "a8fybpg4nh2b5vpw498v"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "web-publishing"
+hash = "2b5vp"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "w498v"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.4.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.4/schema.json"
+
+[code_profile.commands]
+count = 12
+sample = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"]

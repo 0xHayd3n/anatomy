@@ -1,0 +1,7 @@
+{
+  "errors": [],
+  "schema_can_detect": false,
+  "validator_code": "fingerprint-mismatch",
+  "validator_must_detect": "fingerprint != stack.hash + form.hash + domain.hash + function.hash",
+  "comment": "JSON Schema cannot express cross-field equality. The validator package (anatomy-validate) enforces this rule and surfaces a 'fingerprint-mismatch' error. anatomy-spec's harness only checks shape; this fixture documents the boundary for the validator's conformance suite."
+}

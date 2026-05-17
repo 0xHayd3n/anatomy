@@ -1,0 +1,24 @@
+anatomy_version = "0.13"
+tagline = "v0.13 fixture exercising semgrep verify with inline pattern."
+
+[identity]
+stack = "python"
+form = "service"
+domain = "demo"
+function = "verify-test"
+fingerprint = "k19gej08j3rdf212adm5"
+
+[[rules]]
+rule = "Handlers must not access request.body directly."
+
+[rules.verify]
+kind = "semgrep"
+lang = "py"
+pattern = "request.body"
+forbid_in = "src/handlers/**/*.py"
+
+[generated]
+at = 2026-05-14T00:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/0.1/recommended-stacks.meta.json",
+  "title": "Anatomy Recommended Stacks (non-normative)",
+  "description": "Meta-schema for spec/0.1/recommended-stacks.json. The recommended-stacks file is a non-normative tooling reference; this meta-schema only constrains its shape, not its membership.",
+  "type": "object",
+  "required": ["version", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "$comment": { "type": "string" },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "uniqueItems": true
+        },
+        "category": {
+          "type": "string",
+          "enum": ["language", "framework", "runtime", "platform"]
+        },
+        "deprecated": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}

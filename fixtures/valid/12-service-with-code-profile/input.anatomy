@@ -1,0 +1,32 @@
+anatomy_version = "0.4"
+tagline = "A Go REST API for repository metadata."
+
+[identity]
+fingerprint = "9k8e4yzw3ww6sdk1msnb"
+
+[identity.stack]
+id = "go"
+hash = "9k8e4"
+
+[identity.form]
+id = "go-service"
+hash = "yzw3w"
+
+[identity.domain]
+id = "developer-tooling"
+hash = "w6sdk"
+
+[identity.function]
+id = "repository-metadata-api"
+hash = "1msnb"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.4.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.4/schema.json"
+
+[code_profile.endpoints]
+count = 23
+auth_scheme = "jwt-bearer"
+sample = [ "POST /auth/login", "GET /repos/:id", "DELETE /users/:id" ]

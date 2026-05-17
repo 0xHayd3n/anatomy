@@ -1,0 +1,19 @@
+anatomy_memory_version = "0.1"
+repo_fingerprint = "mx6z2zvcrwmye5tfa3cq"
+
+[[entries]]
+id = "m1l3st1a"
+kind = "milestone"
+topic = "v1.0 release"
+content = "Cut the v1.0 release after the schema froze and all conformance fixtures passed."
+at = "2026-05-08T00:00:00.000Z"
+by = "human:test"
+tags = ["release", "v1"]
+
+[[entries]]
+id = "g0tch1aa"
+kind = "gotcha"
+topic = "Existing kinds still parse"
+content = "This entry exists alongside a milestone to confirm the schema accepts both old and new kinds in the same file."
+at = "2026-05-08T00:00:01.000Z"
+by = "human:test"

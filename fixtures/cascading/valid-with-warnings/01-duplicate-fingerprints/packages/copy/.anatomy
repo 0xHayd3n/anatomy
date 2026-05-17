@@ -1,0 +1,27 @@
+anatomy_version = "0.2"
+tagline = "duplicate-fingerprints copy (identical identity to root)"
+
+[identity]
+fingerprint = "a8fybpg4nhfyp3j7c4jy"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "developer-tools"
+hash = "fyp3j"
+
+[identity.function]
+id = "duplicate-demo"
+hash = "7c4jy"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"

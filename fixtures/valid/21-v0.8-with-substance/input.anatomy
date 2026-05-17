@@ -1,0 +1,23 @@
+anatomy_version = "0.8"
+tagline = "v0.8 with substance.key_dependencies (the only remaining substance sub-field)"
+
+[identity]
+stack = "typescript"
+form = "library"
+domain = "developer-tools"
+function = "anatomy-format-helper"
+fingerprint = "g0bwqynxj5tnqb6e1fyq"
+
+[[substance.key_dependencies]]
+name = "ajv"
+why = "JSON Schema 2020-12 validator — load-bearing for every check"
+
+[[substance.key_dependencies]]
+name = "smol-toml"
+why = "TOML parser — preferred over @iarna/toml for ESM support"
+
+[generated]
+at = 2026-05-08T00:00:00.000Z
+by = "anatomy-cli@0.10.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.8/schema.json"

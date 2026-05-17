@@ -1,0 +1,50 @@
+anatomy_version = "0.1"
+description = "Rust CLI with [substance] populated."
+
+[identity]
+fingerprint = "a8fybpg4nh2b5vpw498v"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "web-publishing"
+hash = "2b5vp"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "w498v"
+
+[[substance.key_dependencies]]
+name = "tokio"
+why = "async runtime"
+
+[[substance.key_dependencies]]
+name = "axum"
+why = "HTTP server"
+
+[[substance.key_dependencies]]
+name = "serde"
+why = "serialization"
+
+[[substance.capabilities]]
+phrase = "streaming row-by-row parse"
+source = "src/lib.rs#stream_rows"
+
+[[substance.capabilities]]
+phrase = "type inference (int/float/date)"
+
+[[substance.limitations]]
+phrase = "Linux/macOS only"
+source = "Cargo.toml#[target]"
+
+[generated]
+at = 2026-05-05T14:31:00.000Z
+by = "anatomy-cli@0.0.1"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

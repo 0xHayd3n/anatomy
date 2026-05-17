@@ -1,0 +1,37 @@
+anatomy_version = "0.2"
+tagline = "monorepo SDK package"
+
+[identity]
+fingerprint = "jtambp6hxrfyp3jy2hfe"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "typescript-library"
+hash = "p6hxr"
+
+[identity.domain]
+id = "developer-tools"
+hash = "fyp3j"
+
+[identity.function]
+id = "consumer-sdk"
+hash = "y2hfe"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[[structure.entries]]
+path = "src/"
+purpose = "SDK source"
+kind = "source"
+
+[[interface.exports]]
+symbol = "createClient"
+kind = "function"
+summary = "Construct an SDK client."

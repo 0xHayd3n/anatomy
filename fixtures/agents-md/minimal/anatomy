@@ -1,0 +1,17 @@
+anatomy_version = "0.10"
+tagline = "Minimal v0.10 example"
+description = "Minimal AGENTS.md fixture — required fields only."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "minimal"
+fingerprint = "kh3ybxthmht0yvvskye2"
+
+[generated]
+at = 2026-05-13T12:00:00.000Z
+commit = "abc1234"
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.10/schema.json"

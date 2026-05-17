@@ -1,0 +1,42 @@
+anatomy_version = "0.6"
+tagline = "A static site generator with a composable plugin pipeline."
+
+[identity]
+fingerprint = "a8fybpg4nh2b5vpw498v"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "web-publishing"
+hash = "2b5vp"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "w498v"
+
+[[insights]]
+type = "architecture"
+name = "plugin-pipeline"
+summary = "Content transforms are composable plugins chained in declaration order; core ships 3, users extend"
+
+[[insights]]
+type = "pattern"
+name = "front-matter-contract"
+summary = "Every Markdown file's YAML front-matter is validated against a per-directory schema at build time"
+
+[[insights]]
+type = "constraint"
+name = "static-output-only"
+summary = "Output is always static HTML; server-side rendering and API routes are out of scope by design"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.6.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.6/schema.json"

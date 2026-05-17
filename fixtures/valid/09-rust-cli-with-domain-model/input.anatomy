@@ -1,0 +1,75 @@
+anatomy_version = "0.2"
+tagline = "Markdown-driven static site generator."
+
+[identity]
+fingerprint = "a8fybpg4nh2b5vpw498v"
+
+[identity.stack]
+id = "rust"
+hash = "a8fyb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "web-publishing"
+hash = "2b5vp"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "w498v"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.2.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[[operation.entry_points]]
+path = "src/main.rs"
+role = "cli"
+purpose = "argument parsing and dispatch"
+
+[operation.commands]
+install = "cargo build --release"
+test = "cargo test"
+"test.unit" = "cargo test --lib"
+"test.integration" = "cargo test --test '*'"
+
+[[structure.entries]]
+path = "src/main.rs"
+purpose = "CLI entry: argument parsing and dispatch."
+kind = "source"
+
+[[structure.entries]]
+path = "src/render/"
+purpose = "Template engine and renderers."
+kind = "source"
+
+[[interface.subcommands]]
+name = "build"
+summary = "Render the site to the output directory."
+
+[[interface.subcommands]]
+name = "serve"
+summary = "Local dev server with live reload."
+
+[[interface.subcommands]]
+name = "init"
+summary = "Scaffold a new site with sample content."
+
+[[substance.capabilities]]
+phrase = "incremental rebuilds via mtime cache"
+
+[substance.capabilities.source]
+path = "src/render/cache.rs"
+symbol = "RebuildCache"
+
+[[domain_model.entities]]
+name = "Page"
+summary = "A single rendered output: source path, frontmatter, body HTML."
+
+[[domain_model.entities]]
+name = "Site"
+summary = "The whole collection: pages, assets, templates, config."

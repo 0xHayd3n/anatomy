@@ -1,0 +1,19 @@
+anatomy_version = "0.12"
+tagline = "v0.12 fixture: verify with mixed-kind fields should fail."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "verify-test"
+fingerprint = "5pxem96c7bvwecyh2b0d"
+
+[[rules]]
+rule = "broken verify"
+verify = { kind = "glob_exists", path = "tests/*.ts", pattern = "fetch()" }
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.12/schema.json"

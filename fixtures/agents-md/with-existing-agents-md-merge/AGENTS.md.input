@@ -1,0 +1,15 @@
+# my-onramp-project
+
+This is a hand-written AGENTS.md from before anatomy was adopted.
+
+## Rules
+- Use camelCase for variables
+- Prefer `const` over `let`
+
+## Commands
+- `npm test` runs the test suite
+
+## Architecture notes
+This is the kind of free-form text users write today that anatomy doesn't
+have a structured slot for. After regeneration, the original is preserved
+in AGENTS.md.bak so the user can reconcile content manually.

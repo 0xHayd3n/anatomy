@@ -1,0 +1,39 @@
+anatomy_memory_version = "0.2"
+repo_fingerprint = "kh3ybxthmht0yvvskye5"
+
+[[entries]]
+id = "ent00001"
+kind = "gotcha"
+topic = "Windows shim"
+content = "npm-installed CLIs do not resolve as plain executables on Windows without shell:true."
+at = "2026-05-09T12:00:00.000Z"
+by = "test"
+last_verified_at = "2026-05-13T00:00:00.000Z"
+
+[[entries]]
+id = "ent00002"
+kind = "decision"
+topic = "Hand-roll TOML"
+content = "smol-toml.stringify does not preserve insertion order, which is normative."
+at = "2026-05-10T12:00:00.000Z"
+by = "test"
+last_verified_at = "2026-05-12T00:00:00.000Z"
+
+[[entries]]
+id = "ent00003"
+kind = "convention"
+topic = "Test file locations"
+content = "Tests live in {package}/tests/ and are named *.test.ts so vitest globs pick them up."
+at = "2026-05-08T12:00:00.000Z"
+by = "test"
+last_verified_at = "2026-05-12T12:00:00.000Z"
+
+[[entries]]
+id = "ent00004"
+kind = "attempt"
+topic = "Old approach abandoned"
+content = "Tried hashing entire file but byte-level diffs failed for whitespace-only changes."
+at = "2026-05-07T12:00:00.000Z"
+by = "test"
+deprecated_at = "2026-05-08T12:00:00.000Z"
+deprecated_reason = "Replaced by commit-pin staleness"

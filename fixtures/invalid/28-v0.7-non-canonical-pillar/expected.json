@@ -1,0 +1,3 @@
+{
+  "errors": [{ "instancePath": "/identity/stack", "rule": "pattern" }]
+}

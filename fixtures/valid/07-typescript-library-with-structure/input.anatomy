@@ -1,0 +1,66 @@
+anatomy_version = "0.2"
+tagline = "Type-safe state container for React apps."
+description = "A small immutable state container with selectors, time-travel, and React bindings."
+
+[identity]
+fingerprint = "jtambra0r376n720mtq8"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "react-library"
+hash = "ra0r3"
+
+[identity.domain]
+id = "ui-state-management"
+hash = "76n72"
+
+[identity.function]
+id = "immutable-state-container"
+hash = "0mtq8"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.2.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[[structure.entries]]
+path = "src/store/"
+purpose = "Core store, reducer, dispatch."
+kind = "source"
+
+[[structure.entries]]
+path = "src/react/"
+purpose = "React hook bindings (useStore, useSelector)."
+kind = "source"
+
+[[structure.entries]]
+path = "tests/"
+purpose = "Vitest unit + jsdom integration."
+kind = "tests"
+
+[[interface.exports]]
+symbol = "createStore"
+kind = "function"
+summary = "Construct a store with an initial state and reducer."
+
+[[interface.exports]]
+symbol = "useSelector"
+kind = "function"
+summary = "React hook returning a memoized slice of store state."
+
+[[interface.exports]]
+symbol = "Store"
+kind = "type"
+summary = "Public store interface: dispatch, getState, subscribe."
+
+[[domain_model.entities]]
+name = "Store"
+summary = "An observable container holding immutable state."
+
+[[domain_model.entities]]
+name = "Action"
+summary = "Plain object describing an intent to mutate state."

@@ -1,0 +1,31 @@
+anatomy_version = "0.1"
+
+description = "capabilities[0].phrase exceeds 120 chars."
+
+[identity]
+fingerprint = "00000000000000000000"
+
+[identity.stack]
+id = "rust"
+hash = "00000"
+
+[identity.form]
+id = "cli-tool"
+hash = "00000"
+
+[identity.domain]
+id = "web-publishing"
+hash = "00000"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "00000"
+
+[[substance.capabilities]]
+phrase = "this capability phrase is deliberately constructed to exceed the documented one-hundred-and-twenty character limit imposed by the v0.1 schema for substance.capabilities entries (which is 120, and this string is 130+)"
+
+[generated]
+at     = 2026-05-05T14:31:00Z
+by     = "anatomy-cli@0.0.1"
+model  = "none"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

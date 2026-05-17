@@ -1,0 +1,28 @@
+anatomy_version = "0.13"
+tagline = "Fixture generator for v0.13 ingest conformance"
+
+[identity]
+stack = "javascript"
+form = "javascript-library"
+domain = "todo-domain"  # TODO: replace with real domain
+function = "todo-function"  # TODO: replace with real function
+fingerprint = "s4y5jvdvpr266vvp396p"
+
+
+[environment]
+runtime = "node"
+
+[[rules]]
+rule = "Tests live in tests/ next to source files"
+
+[[rules]]
+rule = "Use TypeScript strict mode"
+
+[[rules]]
+rule = "Database queries go through the repository layer"
+
+[generated]
+at = 2026-05-13T16:46:44.190Z
+by = "@anatomy/cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

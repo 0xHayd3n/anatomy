@@ -1,0 +1,31 @@
+anatomy_version = "0.4"
+tagline = "TypeScript validation library for .anatomy files."
+
+[identity]
+fingerprint = "jtambp6hxrw6sdkdsnfk"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "typescript-library"
+hash = "p6hxr"
+
+[identity.domain]
+id = "developer-tooling"
+hash = "w6sdk"
+
+[identity.function]
+id = "anatomy-file-validator"
+hash = "dsnfk"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.4.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.4/schema.json"
+
+[code_profile.exports]
+count = 34
+sample = [ "validate", "validateTree", "findAnatomyForPath" ]

@@ -1,0 +1,20 @@
+anatomy_version = "0.10"
+tagline = "v0.10 fixture with optional [generate] section"
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "minimal"
+fingerprint = "kh3ybxthmht0yvvskye2"
+
+[generate]
+agents_md = true
+agents_md_budget = 2000
+agents_md_memory_count = 15
+
+[generated]
+at = 2026-05-13T12:00:00.000Z
+by = "anatomy-cli@0.13.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.10/schema.json"

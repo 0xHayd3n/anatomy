@@ -1,0 +1,28 @@
+anatomy_version = "0.1"
+
+description = "domain id has trailing hyphen."
+
+[identity]
+fingerprint = "00000000000000000000"
+
+[identity.stack]
+id = "rust"
+hash = "00000"
+
+[identity.form]
+id = "cli-tool"
+hash = "00000"
+
+[identity.domain]
+id = "web-publishing-"
+hash = "00000"
+
+[identity.function]
+id = "markdown-to-static-html"
+hash = "00000"
+
+[generated]
+at     = 2026-05-05T14:22:00Z
+by     = "anatomy-cli@0.0.1"
+model  = "none"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

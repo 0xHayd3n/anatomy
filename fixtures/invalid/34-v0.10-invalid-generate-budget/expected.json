@@ -1,0 +1,5 @@
+{
+  "errors": [
+    { "instancePath": "/generate/agents_md_budget", "rule": "minimum" }
+  ]
+}

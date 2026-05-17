@@ -1,0 +1,10 @@
+rules:
+  - id: spawn-sync-without-shell-true
+    message: spawnSync to git or external CLIs must pass shell:true on Windows for .cmd shim resolution. See the project rule in .anatomy.
+    severity: WARNING
+    languages: [typescript, javascript]
+    pattern: spawnSync(...)
+    pattern-not: |
+      spawnSync(..., { ..., shell: true, ... })
+    pattern-not: |
+      spawnSync(..., { ..., shell: $X, ... })

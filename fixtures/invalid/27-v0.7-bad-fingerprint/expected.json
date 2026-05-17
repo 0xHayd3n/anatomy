@@ -1,0 +1,6 @@
+{
+  "errors": [],
+  "schema_can_detect": false,
+  "validator_code": "fingerprint-mismatch",
+  "validator_must_detect": "identity.fingerprint does not match fingerprintFromPillars(stack, form, domain, function)"
+}

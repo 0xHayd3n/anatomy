@@ -1,0 +1,29 @@
+anatomy_version = "0.11"
+tagline = "Fixture exercising v0.11 [generate] flags."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "minimal"
+fingerprint = "kh3ybxthmht0yvvskye2"
+
+[generate]
+agents_md = true
+agents_md_budget = 2000
+agents_md_memory_count = 8
+cursor_mdc = true
+cursor_rules = true
+aider_conventions = true
+cline_rules = false
+roo_rules = false
+continue_rules = true
+windsurf_rules = false
+render_budget = 1200
+render_memory_count = 8
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.11/schema.json"

@@ -1,0 +1,36 @@
+{
+  "name": "@anatomy/spec",
+  "version": "1.0.0",
+  "description": "The Anatomy standard — schema, recommended-stacks reference, canonicalization rules, conformance fixtures.",
+  "type": "module",
+  "files": [
+    "spec/",
+    "fixtures/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "fix:hashes": "node scripts/fix-fixture-hashes.mjs",
+    "validate": "node scripts/validate-spec.mjs && node --test eval/scripts/tests/*.test.mjs",
+    "eval": "node eval/scripts/run-citation.mjs",
+    "eval:baseline": "node eval/scripts/run-citation.mjs --update-baseline",
+    "eval:test": "node --test eval/scripts/tests/*.test.mjs",
+    "test": "npm run validate"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0",
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.0",
+    "js-yaml": "^4.1.0",
+    "promptfoo": "^0.78.0",
+    "smol-toml": "^1.3.0",
+    "typescript": "^6.0.3"
+  }
+}

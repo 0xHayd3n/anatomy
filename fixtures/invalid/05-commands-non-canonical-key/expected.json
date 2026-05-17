@@ -1,0 +1,5 @@
+{
+  "errors": [
+    { "instancePath": "/operation/commands", "rule": "propertyNames" }
+  ]
+}

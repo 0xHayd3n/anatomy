@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/0.15/schema.json",
+  "title": "Anatomy",
+  "description": "Schema for .anatomy files (v0.15). Additive over v0.14: adds four optional top-level array sections for uncapturable institutional knowledge — [[vocabulary]] (project-coined terms), [[invariants]] (cross-file conditions), [[anti_patterns]] (rejected approaches), [[prerequisites]] (assumed background knowledge). No changes to existing sections. v0.14 files migrate to v0.15 with no data change.",
+  "type": "object",
+  "required": ["anatomy_version", "tagline", "identity", "generated"],
+  "additionalProperties": false,
+  "properties": {
+    "anatomy_version": { "type": "string", "const": "0.15" },
+    "tagline":     { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "author":         { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]+$" },
+    "license":        { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[^\\n\\r]+$" },
+    "docs_url":       { "type": "string", "format": "uri", "minLength": 1, "maxLength": 300, "pattern": "^[^\\n\\r]+$" },
+    "repository_url": { "type": "string", "format": "uri", "minLength": 1, "maxLength": 300, "pattern": "^[^\\n\\r]+$" },
+    "identity":    { "$ref": "#/$defs/identity" },
+    "generated":   { "$ref": "#/$defs/generated" },
+    "generate":    { "$ref": "#/$defs/generate" },
+    "operation":   { "$ref": "#/$defs/operation" },
+    "structure":   { "$ref": "#/$defs/structure" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "substance":   { "$ref": "#/$defs/substance" },
+    "rules": {
+      "type": "array", "minItems": 1, "maxItems": 20,
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "flows": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/flow" }
+    },
+    "decisions": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/decision" }
+    },
+    "vocabulary": {
+      "type": "array", "minItems": 1, "maxItems": 30,
+      "items": { "$ref": "#/$defs/vocabulary_entry" }
+    },
+    "invariants": {
+      "type": "array", "minItems": 1, "maxItems": 15,
+      "items": { "$ref": "#/$defs/invariant_entry" }
+    },
+    "anti_patterns": {
+      "type": "array", "minItems": 1, "maxItems": 12,
+      "items": { "$ref": "#/$defs/anti_pattern_entry" }
+    },
+    "prerequisites": {
+      "type": "array", "minItems": 1, "maxItems": 10,
+      "items": { "$ref": "#/$defs/prerequisite_entry" }
+    }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "required": ["stack", "form", "domain", "function", "fingerprint"],
+      "additionalProperties": false,
+      "properties": {
+        "stack":       { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "form":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "domain":      { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "function":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "fingerprint": { "type": "string", "pattern": "^[a-z0-9]{20}$" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": ["rule"],
+      "additionalProperties": false,
+      "properties": {
+        "rule": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "why":  { "type": "string", "minLength": 1, "maxLength": 200 },
+        "verify": { "$ref": "#/$defs/verify" }
+      }
+    },
+    "verify": {
+      "type": "object",
+      "required": ["kind"],
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "glob_exists" },
+            "path": { "type": "string", "minLength": 1, "description": "Glob (repo-root-relative). With should_not=false: ≥1 file must match. With should_not=true: 0 files must match." },
+            "should_not": { "type": "boolean", "description": "Invert: assert NO files match the glob. Default false." }
+          },
+          "required": ["kind", "path"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "glob_only" },
+            "match": { "type": "string", "minLength": 1, "description": "Glob of files to locate." },
+            "container": { "type": "string", "minLength": 1, "description": "Glob; every file from `match` must also match this." }
+          },
+          "required": ["kind", "match", "container"]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "ast_pattern" },
+            "lang": { "enum": ["ts", "tsx", "js", "jsx", "py", "rs", "go", "java"], "description": "Language for ast-grep parser." },
+            "pattern": { "type": "string", "minLength": 1, "description": "ast-grep pattern (inline string)." },
+            "expect_in": { "type": "string", "minLength": 1, "description": "Glob: pattern must match in ≥1 file." },
+            "forbid_in": { "type": "string", "minLength": 1, "description": "Glob: pattern must match in 0 files." }
+          },
+          "required": ["kind", "lang", "pattern"],
+          "oneOf": [
+            { "required": ["expect_in"], "not": { "required": ["forbid_in"] } },
+            { "required": ["forbid_in"], "not": { "required": ["expect_in"] } }
+          ]
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "const": "semgrep" },
+            "lang": { "enum": ["py", "go", "java", "rb", "c", "cpp", "rs", "ts", "tsx", "js", "jsx"], "description": "Language for Semgrep parser. Required when using inline pattern; absent for rule_file (the YAML declares its own languages)." },
+            "pattern": { "type": "string", "minLength": 1, "description": "Inline Semgrep pattern. Mutually exclusive with rule_file." },
+            "rule_file": { "type": "string", "minLength": 1, "pattern": "\\.ya?ml$", "description": "Repo-root-relative path to a Semgrep YAML rule file. Mutually exclusive with pattern + lang. Path must resolve inside the repo." },
+            "expect_in": { "type": "string", "minLength": 1, "description": "Glob: pattern must match in >=1 file." },
+            "forbid_in": { "type": "string", "minLength": 1, "description": "Glob: pattern must match in 0 files." }
+          },
+          "required": ["kind"],
+          "oneOf": [
+            { "required": ["pattern", "lang"], "not": { "anyOf": [{ "required": ["rule_file"] }] } },
+            { "required": ["rule_file"], "not": { "anyOf": [{ "required": ["pattern"] }, { "required": ["lang"] }] } }
+          ],
+          "allOf": [
+            {
+              "oneOf": [
+                { "required": ["expect_in"], "not": { "required": ["forbid_in"] } },
+                { "required": ["forbid_in"], "not": { "required": ["expect_in"] } }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "flow": {
+      "type": "object",
+      "required": ["name", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "name":    { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 300, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["topic", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "topic":  { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
+    "generated": {
+      "type": "object",
+      "required": ["at", "by", "model", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "at":     { "type": "string", "format": "date-time" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{7,12}$" },
+        "by":     { "type": "string", "minLength": 1 },
+        "model":  { "type": "string", "minLength": 1 },
+        "schema": { "type": "string", "format": "uri" }
+      }
+    },
+    "generate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-repo render preferences. All fields optional with defaults. Holds human choice (uncapturable), not derivable content. v0.11 added per-tool emit flags (Cursor/Aider/Cline/Roo/Continue/Windsurf) plus a shared render_budget and render_memory_count for the new renderers.",
+      "properties": {
+        "agents_md": {
+          "type": "boolean",
+          "description": "Emit AGENTS.md on `anatomy render` (default true)."
+        },
+        "agents_md_budget": {
+          "type": "integer",
+          "minimum": 500,
+          "description": "Token cap for the emitted AGENTS.md (default 1500)."
+        },
+        "agents_md_memory_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Max recent-memory entries surfaced in AGENTS.md (default 10)."
+        },
+        "cursor_mdc":         { "type": "boolean", "description": "Emit .cursor/rules/anatomy.mdc (default false)." },
+        "cursor_rules":       { "type": "boolean", "description": "Emit .cursorrules (default false)." },
+        "aider_conventions":  { "type": "boolean", "description": "Emit CONVENTIONS.md (default false)." },
+        "cline_rules":        { "type": "boolean", "description": "Emit .clinerules (default false)." },
+        "roo_rules":          { "type": "boolean", "description": "Emit .roorules (default false)." },
+        "continue_rules":     { "type": "boolean", "description": "Emit .continuerules (default false)." },
+        "windsurf_rules":     { "type": "boolean", "description": "Emit .windsurfrules (default false)." },
+        "render_budget":       { "type": "integer", "minimum": 500, "description": "Token cap for all v0.11 renderers (default 1500)." },
+        "render_memory_count": { "type": "integer", "minimum": 0, "description": "Max memory entries for v0.11 renderers (default 10)." }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "entry_points": {
+          "type": "array", "maxItems": 10,
+          "items": { "$ref": "#/$defs/entry_point" }
+        },
+        "commands": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)?$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "maxProperties": 25
+        },
+        "conventions": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "maxProperties": 15
+        }
+      }
+    },
+    "entry_point": {
+      "type": "object",
+      "required": ["path", "role"],
+      "additionalProperties": false,
+      "not": { "required": ["description", "purpose"] },
+      "properties": {
+        "path":        { "type": "string", "minLength": 1, "maxLength": 256 },
+        "role":        { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "purpose":     { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+        "description": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" }
+      }
+    },
+    "structure": {
+      "type": "object", "additionalProperties": false, "required": ["entries"],
+      "properties": {
+        "entries": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["path", "purpose", "kind"], "additionalProperties": false,
+            "properties": {
+              "path":       { "type": "string", "minLength": 1, "maxLength": 256 },
+              "purpose":    { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+              "kind":       { "enum": ["source", "tests", "docs", "config", "build", "scripts", "examples", "generated", "other"] },
+              "convention": { "type": "string", "minLength": 1, "maxLength": 200, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "environment": {
+      "type": "object", "additionalProperties": false,
+      "anyOf": [
+        { "required": ["language_version"] }, { "required": ["runtime"] },
+        { "required": ["os"] }, { "required": ["required_services"] }, { "required": ["required_env"] }
+      ],
+      "properties": {
+        "language_version": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "runtime": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "os": {
+          "oneOf": [
+            { "type": "array", "items": { "const": "any" }, "minItems": 1, "maxItems": 1 },
+            { "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["linux", "macos", "windows", "freebsd"] } }
+          ]
+        },
+        "required_services": {
+          "type": "array", "minItems": 1, "maxItems": 10,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        },
+        "required_env": {
+          "type": "array", "minItems": 1, "maxItems": 25,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+              "why":  { "type": "string", "minLength": 1, "maxLength": 80 }
+            }
+          }
+        }
+      }
+    },
+    "substance": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "key_dependencies": {
+          "type": "array", "minItems": 1, "maxItems": 10,
+          "items": {
+            "type": "object", "required": ["name", "why"], "additionalProperties": false,
+            "properties": {
+              "name":    { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+              "version": { "type": "string", "minLength": 1, "maxLength": 50, "pattern": "^[^\\n\\r]+$" },
+              "why":     { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" }
+            }
+          }
+        }
+      }
+    },
+    "vocabulary_entry": {
+      "type": "object",
+      "required": ["term", "meaning"],
+      "additionalProperties": false,
+      "properties": {
+        "term":     { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+        "meaning":  { "type": "string", "minLength": 1, "maxLength": 300 },
+        "aliases":  { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" } },
+        "contrast": { "type": "array", "maxItems": 3, "items": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" } }
+      }
+    },
+    "invariant_entry": {
+      "type": "object",
+      "required": ["invariant"],
+      "additionalProperties": false,
+      "properties": {
+        "invariant":      { "type": "string", "minLength": 1, "maxLength": 300 },
+        "triggered_by":   { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+        "affected_paths": { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 200 } },
+        "why":            { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "anti_pattern_entry": {
+      "type": "object",
+      "required": ["pattern", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "pattern":  { "type": "string", "minLength": 1, "maxLength": 300 },
+        "instead":  { "type": "string", "minLength": 1, "maxLength": 300 },
+        "reason":   { "type": "string", "minLength": 1, "maxLength": 400 },
+        "keywords": { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "^[^\\n\\r]+$" } }
+      }
+    },
+    "prerequisite_entry": {
+      "type": "object",
+      "required": ["topic", "why"],
+      "additionalProperties": false,
+      "properties": {
+        "topic": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^[^\\n\\r]+$" },
+        "why":   { "type": "string", "minLength": 1, "maxLength": 200 },
+        "link":  { "type": "string", "format": "uri", "minLength": 1, "maxLength": 300 }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+anatomy_version = "0.4"
+tagline = "A React component library with Tailwind styling."
+
+[identity]
+fingerprint = "4xcqcp7xzvzw58q0f678"
+
+[identity.stack]
+id = "react"
+hash = "4xcqc"
+
+[identity.form]
+id = "react-component-library"
+hash = "p7xzv"
+
+[identity.domain]
+id = "ui-design"
+hash = "zw58q"
+
+[identity.function]
+id = "react-component-collection"
+hash = "0f678"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.4.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.4/schema.json"
+
+[code_profile.components]
+count = 47
+styling = "tailwind"
+sample = [ "Button", "Modal", "DataTable", "Tooltip", "Badge" ]

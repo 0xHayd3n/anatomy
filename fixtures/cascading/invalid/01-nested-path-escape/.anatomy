@@ -1,0 +1,27 @@
+anatomy_version = "0.2"
+tagline = "valid root"
+
+[identity]
+fingerprint = "jtambpg4nhfyp3jxvvsc"
+
+[identity.stack]
+id = "typescript"
+hash = "jtamb"
+
+[identity.form]
+id = "cli-tool"
+hash = "pg4nh"
+
+[identity.domain]
+id = "developer-tools"
+hash = "fyp3j"
+
+[identity.function]
+id = "demo-root"
+hash = "xvvsc"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.2/schema.json"

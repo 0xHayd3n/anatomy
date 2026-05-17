@@ -1,0 +1,5 @@
+{
+  "errors": [
+    { "instancePath": "/rules/0/verify/lang", "rule": "enum" }
+  ]
+}

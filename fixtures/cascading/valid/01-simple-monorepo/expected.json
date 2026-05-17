@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "results": [
+    { "relPath": ".anatomy", "ok": true, "errors": [], "warnings": [] },
+    { "relPath": "packages/sdk/.anatomy", "ok": true, "errors": [], "warnings": [] }
+  ]
+}

@@ -1,0 +1,82 @@
+anatomy_version = "0.2"
+tagline = "Embedding inference HTTP+gRPC service in Go."
+
+[identity]
+fingerprint = "9k8e4s2ym581dtt28dkv"
+
+[identity.stack]
+id = "go"
+hash = "9k8e4"
+
+[identity.form]
+id = "microservice"
+hash = "s2ym5"
+
+[identity.domain]
+id = "machine-learning"
+hash = "81dtt"
+
+[identity.function]
+id = "embedding-inference-api"
+hash = "28dkv"
+
+[generated]
+at = 2026-05-06T12:00:00.000Z
+by = "anatomy-cli@0.2.0"
+model = "claude-sonnet-4-6"
+schema = "https://anatomy.dev/spec/0.2/schema.json"
+
+[[structure.entries]]
+path = "cmd/server/"
+purpose = "Service entrypoint."
+kind = "source"
+
+[[structure.entries]]
+path = "internal/embed/"
+purpose = "Model loading and inference."
+kind = "source"
+
+[[structure.entries]]
+path = "deploy/"
+purpose = "Kubernetes manifests."
+kind = "config"
+
+[environment]
+language_version = ">=1.22"
+runtime = "go"
+os = [ "linux" ]
+
+[[environment.required_services]]
+name = "redis"
+why = "embedding cache"
+
+[[environment.required_env]]
+name = "MODEL_PATH"
+why = "filesystem path to the model file"
+
+[[environment.required_env]]
+name = "REDIS_URL"
+why = "cache backend connection string"
+
+[[interface.endpoints]]
+method = "POST"
+path = "/v1/embed"
+summary = "Batch text → embedding vectors."
+
+[[interface.endpoints]]
+method = "GET"
+path = "/health"
+summary = "Liveness probe."
+
+[[interface.endpoints]]
+method = "GRPC"
+path = "embed.v1.EmbeddingService/Encode"
+summary = "Streaming bidirectional embed RPC."
+
+[[domain_model.entities]]
+name = "EmbeddingRequest"
+summary = "Batch of input strings + model selector."
+
+[[domain_model.entities]]
+name = "EmbeddingResponse"
+summary = "Aligned vectors + model id + token-count metadata."

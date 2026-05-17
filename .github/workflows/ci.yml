@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  spec-validate:
+    name: spec content (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run validate
+
+  validate-package:
+    name: "@anatomy/validate (${{ matrix.os }}, Node ${{ matrix.node }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["22", "24"]
+    defaults:
+      run:
+        working-directory: anatomy-validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "npm"
+          cache-dependency-path: anatomy-validate/package-lock.json
+      - name: Install semgrep (optional verify integration tests)
+        if: runner.os != 'Windows'
+        run: python -m pip install --user semgrep
+        shell: bash
+        working-directory: .
+        continue-on-error: true
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  cli-package:
+    name: "@anatomy/cli (${{ matrix.os }}, Node ${{ matrix.node }})"
+    needs: validate-package
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ["22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "npm"
+          cache-dependency-path: anatomy-cli/package-lock.json
+      # @anatomy/cli depends on @anatomy/validate via file:; build the latter
+      # first so the file: dep has a dist/ to copy.
+      - name: Install + build @anatomy/validate
+        working-directory: anatomy-validate
+        run: |
+          npm ci
+          npm run build
+      - name: Install @anatomy/cli (with --install-links for portability)
+        working-directory: anatomy-cli
+        run: npm install --install-links=true
+      - name: Build @anatomy/cli
+        working-directory: anatomy-cli
+        run: npm run build
+      - name: Test @anatomy/cli
+        working-directory: anatomy-cli
+        run: npm test

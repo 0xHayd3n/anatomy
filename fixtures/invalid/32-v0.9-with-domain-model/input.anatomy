@@ -1,0 +1,19 @@
+anatomy_version = "0.9"
+tagline = "v0.9 fixture with [[domain_model.entities]] — must be rejected"
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "rejected-dm"
+fingerprint = "fessc2qan234z5qeqd4j"
+
+[[domain_model.entities]]
+name = "User"
+summary = "should be rejected by additionalProperties"
+
+[generated]
+at = 2026-05-09T12:00:00.000Z
+by = "anatomy-cli@0.12.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.9/schema.json"

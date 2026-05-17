@@ -1,0 +1,51 @@
+anatomy_version = "0.9"
+tagline = "Full v0.9 test fixture exercising all surviving optional sections"
+description = "Multi-section v0.9 fixture used for conformance. Demonstrates that operation, structure, environment, rules, flows, and decisions can all coexist after v0.9 dropped [interface], [domain_model], and [substance]."
+
+[identity]
+stack = "typescript"
+form = "library"
+domain = "developer-tools"
+function = "anatomy-format-validator"
+fingerprint = "52s6gcpyaea4mden20hj"
+
+[[operation.entry_points]]
+path = "src/index.ts"
+role = "library-root"
+purpose = "public API surface"
+
+[operation.commands]
+build = "tsc"
+test = "vitest"
+
+[[structure.entries]]
+path = "src/"
+purpose = "library source"
+kind = "source"
+
+[[structure.entries]]
+path = "tests/"
+purpose = "vitest unit + integration"
+kind = "tests"
+
+[environment]
+language_version = ">=22"
+runtime = "node"
+
+[[rules]]
+rule = "All checks must return { errors, warnings } — never throw"
+why = "consumers compose checks; throws would break batch validation"
+
+[[flows]]
+name = "validate-pipeline"
+summary = "TOML parse → version-routed schema → fingerprint check → path checks → return errors+warnings"
+
+[[decisions]]
+topic = "v0.9 drops [interface], [domain_model], and [substance]"
+reason = "0/27, 0/27, 1/27 cite rates across 27 cross-repo treatment trials in the 2026-05-09 N=3 eval; all derivable from source per the project's 'do not add fields LLM can re-derive' rule"
+
+[generated]
+at = 2026-05-09T12:00:00.000Z
+by = "anatomy-cli@0.12.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.9/schema.json"

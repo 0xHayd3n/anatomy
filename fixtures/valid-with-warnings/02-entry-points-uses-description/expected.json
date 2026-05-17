@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "code": "entry-point-description-deprecated",
+      "field": "operation.entry_points[0].description",
+      "comment": "Soft warning: legacy v0.1 key 'description' on an entry_point in a v0.2 file. Maintainer should rename to 'purpose'."
+    }
+  ]
+}

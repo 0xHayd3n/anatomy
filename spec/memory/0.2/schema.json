@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anatomy.dev/spec/memory/0.2/schema.json",
+  "title": "Anatomy Memory",
+  "description": "Append-only lived-experience memory paired with an .anatomy file (v0.2). Adds optional last_verified_at + verified_by entry fields for decay-tracking. v0.1 entries (which lack these fields) remain valid — a v0.2 consumer treats absence as 'untouched' and falls back to the entry's `at` timestamp as proxy for last verification.",
+  "type": "object",
+  "required": ["anatomy_memory_version", "repo_fingerprint"],
+  "additionalProperties": false,
+  "properties": {
+    "anatomy_memory_version": { "type": "string", "const": "0.2" },
+    "repo_fingerprint": { "type": "string", "pattern": "^[a-z0-9]{20}$" },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["id", "kind", "topic", "content", "at", "by"],
+      "additionalProperties": false,
+      "properties": {
+        "id":      { "type": "string", "pattern": "^[a-z0-9]{8}$" },
+        "kind":    { "enum": ["gotcha", "decision", "convention", "attempt", "milestone"] },
+        "topic":   { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^[^\\n\\r]+$" },
+        "content": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "at":      { "type": "string", "format": "date-time" },
+        "by":      { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^(claude-session(:[a-z0-9-]+)?|human:[a-z0-9._-]+|unknown)$" },
+        "refs":    { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 256 } },
+        "tags":    { "type": "array", "maxItems": 5, "items": { "type": "string", "minLength": 1, "maxLength": 40, "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" } },
+        "superseded_by":     { "type": "string", "pattern": "^[a-z0-9]{8}$" },
+        "deprecated_at":     { "type": "string", "format": "date-time" },
+        "deprecated_reason": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "helped_count":      { "type": "integer", "minimum": 0 },
+        "helped_by": {
+          "type": "array",
+          "maxItems": 200,
+          "items": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^(claude-session(:[a-z0-9-]+)?|human:[a-z0-9._-]+|@[a-z0-9._-]+)$" }
+        },
+        "last_verified_at": { "type": "string", "format": "date-time" },
+        "verified_by": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "type": "string", "minLength": 1, "maxLength": 80, "pattern": "^(claude-session(:[a-z0-9-]+)?|human:[a-z0-9._-]+|@[a-z0-9._-]+)$" }
+        }
+      }
+    }
+  }
+}

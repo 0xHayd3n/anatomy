@@ -1,0 +1,18 @@
+{
+  "name": "anatomy-consumer",
+  "version": "0.9.0",
+  "description": "Loads .anatomy + .anatomy-memory into Claude Code as ambient context (SessionStart hook) and structured tools (MCP server).",
+  "homepage": "https://github.com/haydenseymour/anatomy",
+  "license": "MIT",
+  "hooks": {
+    "SessionStart": [
+      { "command": "anatomy hook" }
+    ]
+  },
+  "mcpServers": {
+    "anatomy": {
+      "command": "anatomy",
+      "args": ["mcp"]
+    }
+  }
+}

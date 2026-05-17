@@ -1,0 +1,14 @@
+{
+  "ok": false,
+  "results": [
+    { "relPath": ".anatomy", "ok": true, "errors": [], "warnings": [] },
+    {
+      "relPath": "packages/sdk/.anatomy",
+      "ok": false,
+      "errors": [
+        { "code": "structure-path-not-found" }
+      ],
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+anatomy_version = "0.1"
+
+description = "fingerprint intentionally wrong"
+
+[identity]
+fingerprint = "aaaaabbbbbcccccddddd"
+
+[identity.stack]
+id   = "rust"
+hash = "5k2v1"
+
+[identity.form]
+id   = "cli-tool"
+hash = "f3rm9"
+
+[identity.domain]
+id   = "web-publishing"
+hash = "d8mk2"
+
+[identity.function]
+id   = "markdown-to-static-html"
+hash = "p407m"
+
+[generated]
+at     = 2026-05-05T14:22:00Z
+by     = "anatomy-cli@0.0.1"
+model  = "none"
+schema = "https://anatomy.dev/spec/0.1/schema.json"

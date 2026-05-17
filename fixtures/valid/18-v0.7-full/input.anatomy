@@ -1,0 +1,30 @@
+anatomy_version = "0.7"
+tagline = "Full v0.7 test fixture with all high-value sections"
+
+[identity]
+stack = "typescript"
+form = "library"
+domain = "developer-tools"
+function = "anatomy-format-validator"
+fingerprint = "52s6gcpyaea4mden20hj"
+
+[[rules]]
+rule = "Never import across package boundaries — each package has its own public API in index.ts"
+why = "Prevents circular dependency chains discovered in the 0.3 refactor"
+
+[[rules]]
+rule = "All checks must return { errors, warnings } — never throw"
+
+[[flows]]
+name = "validation-pipeline"
+summary = "parse TOML → schema check → hash check → fingerprint check → path checks → return result"
+
+[[decisions]]
+topic = "Hand-rolled TOML renderer in anatomy-cli"
+reason = "smol-toml.stringify does not preserve insertion order; section order is normative per spec and must be deterministic for human readability"
+
+[generated]
+at = 2026-05-07T00:00:00.000Z
+by = "anatomy-cli@0.7.0"
+model = "none"
+schema = "https://anatomy.dev/spec/0.7/schema.json"

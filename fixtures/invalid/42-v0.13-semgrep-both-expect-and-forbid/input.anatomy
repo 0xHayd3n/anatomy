@@ -1,0 +1,19 @@
+anatomy_version = "0.13"
+tagline = "v0.13 invalid: cannot set both expect_in and forbid_in."
+
+[identity]
+stack = "python"
+form = "service"
+domain = "demo"
+function = "verify-test"
+fingerprint = "k19gej08j3rdf212adm5"
+
+[[rules]]
+rule = "Handlers must not access request.body directly."
+verify = { kind = "semgrep", lang = "py", pattern = "request.body", expect_in = "src/**/*.py", forbid_in = "src/handlers/**/*.py" }
+
+[generated]
+at = 2026-05-14T00:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.13/schema.json"

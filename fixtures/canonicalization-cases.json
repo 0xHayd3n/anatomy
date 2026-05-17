@@ -1,0 +1,22 @@
+{
+  "valid": [
+    { "input": "rust",                       "canonical": "rust",                     "expected_hash": "a8fyb" },
+    { "input": "Rust",                       "canonical": "rust",                     "expected_hash": "a8fyb" },
+    { "input": "RUST",                       "canonical": "rust",                     "expected_hash": "a8fyb" },
+    { "input": "Static Site Generator",      "canonical": "static-site-generator",    "expected_hash": "bygz6" },
+    { "input": "static_site_generator",      "canonical": "static-site-generator",    "expected_hash": "bygz6" },
+    { "input": "static__site generator",     "canonical": "static-site-generator",    "expected_hash": "bygz6" },
+    { "input": "  Web Publishing  ",         "canonical": "web-publishing",           "expected_hash": "2b5vp" },
+    { "input": "--leading--trailing--",      "canonical": "leading-trailing",         "expected_hash": "xx9a9" },
+    { "input": "markdown-to-static-html",    "canonical": "markdown-to-static-html",  "expected_hash": "w498v" },
+    { "input": "react-native",               "canonical": "react-native",             "expected_hash": "spgbx" },
+    { "input": "GraphQL Server",             "canonical": "graphql-server",           "expected_hash": "15st9" }
+  ],
+  "invalid": [
+    { "input": "C++",                        "reason": "+ outside [a-z0-9-]" },
+    { "input": "日本語",                      "reason": "non-ASCII characters" },
+    { "input": "",                           "reason": "empty" },
+    { "input": "   ",                        "reason": "whitespace-only collapses to empty" },
+    { "input": "---",                        "reason": "punctuation-only strips to empty" }
+  ]
+}

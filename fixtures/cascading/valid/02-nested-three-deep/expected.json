@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "results": [
+    { "relPath": ".anatomy", "ok": true, "errors": [], "warnings": [] },
+    { "relPath": "apps/.anatomy", "ok": true, "errors": [], "warnings": [] },
+    { "relPath": "apps/web/.anatomy", "ok": true, "errors": [], "warnings": [] }
+  ]
+}

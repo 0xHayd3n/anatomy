@@ -1,0 +1,27 @@
+anatomy_version = "0.12"
+tagline = "v0.12 fixture exercising all 3 verify kinds."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "verify-test"
+fingerprint = "5pxem96c7bvwecyh2b0d"
+
+[[rules]]
+rule = "Tests live under tests/"
+verify = { kind = "glob_exists", path = "tests/*.test.ts" }
+
+[[rules]]
+rule = "Route handlers live in src/routes/"
+verify = { kind = "glob_only", match = "src/**/*-route.ts", container = "src/routes/**" }
+
+[[rules]]
+rule = "No direct fetch() outside src/api/"
+verify = { kind = "ast_pattern", lang = "ts", pattern = "fetch($_)", forbid_in = "src/!(api)/**/*.ts" }
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.12/schema.json"

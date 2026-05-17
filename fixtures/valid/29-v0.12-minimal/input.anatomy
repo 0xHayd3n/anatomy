@@ -1,0 +1,15 @@
+anatomy_version = "0.12"
+tagline = "Minimal v0.12 fixture — only required fields."
+
+[identity]
+stack = "javascript"
+form = "library"
+domain = "demo"
+function = "minimal"
+fingerprint = "kh3ybxthmht0yvvskye2"
+
+[generated]
+at = 2026-05-13T14:00:00.000Z
+by = "@anatomy/cli@test"
+model = "none"
+schema = "https://anatomy.dev/spec/0.12/schema.json"
