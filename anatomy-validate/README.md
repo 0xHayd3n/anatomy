@@ -1,11 +1,11 @@
-# `@anatomy/validate`
+# `@anatomytool/validate`
 
 TypeScript validator for `.anatomy` and `.anatomy-memory` files. Routes by declared wire version (v0.1, v0.2, v0.4–v0.15, and v1.0) and supports v0.3 cascading semantics for repos with multiple `.anatomy` files.
 
 ## Install
 
 ```bash
-npm install @anatomy/validate
+npm install @anatomytool/validate
 ```
 
 Requires Node.js ≥ 22.
@@ -15,7 +15,7 @@ Requires Node.js ≥ 22.
 ### Single file
 
 ```typescript
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { readFileSync } from "node:fs";
 
 const text = readFileSync(".anatomy", "utf8");
@@ -32,7 +32,7 @@ if (result.ok) {
 ### Cascading tree
 
 ```typescript
-import { validateTree } from "@anatomy/validate";
+import { validateTree } from "@anatomytool/validate";
 
 const tree = validateTree(repoRoot);
 // tree.results: Map<path, ValidateResult>
@@ -42,7 +42,7 @@ const tree = validateTree(repoRoot);
 ### Memory file
 
 ```typescript
-import { validateMemory } from "@anatomy/validate";
+import { validateMemory } from "@anatomytool/validate";
 
 const result = validateMemory(memoryText, {
   anatomyFingerprint: parsedAnatomy.identity.fingerprint,
@@ -101,7 +101,7 @@ Verify clauses run during `validate()` when `repoRoot` is provided. Violations s
 For repos with multiple `.anatomy` files (one at root, plus per-package overrides):
 
 ```typescript
-import { findAnatomyForPath, discoverAllAnatomies } from "@anatomy/validate";
+import { findAnatomyForPath, discoverAllAnatomies } from "@anatomytool/validate";
 
 const nearest = findAnatomyForPath(repoRoot, "packages/server/src/index.ts");
 const all = discoverAllAnatomies(repoRoot);

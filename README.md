@@ -91,22 +91,19 @@ Measured in a cross-repo N=3 eval (2026-05-09):
 
 ## Install
 
-Not yet published to npm. Install the CLI from source:
-
 ```bash
-git clone https://github.com/0xHayd3n/anatomy
-cd anatomy/anatomy-cli
-npm install        # @anatomy/validate auto-builds via its prepare hook
-npm run build      # compile the CLI (tsc → dist/); required, the binary is dist/bin.js
-npm link           # expose `anatomy` on your PATH (optional)
-anatomy --help
+npm install -g @anatomytool/cli      # provides `anatomy` (and `anatomy-cli`)
+# or, without installing:
+npx @anatomytool/cli --help
 ```
 
 Requires **Node.js ≥ 22**.
 
-To work on the spec and conformance fixtures instead, from the repo root:
+To work on the spec and conformance fixtures, or build the CLI from source:
 
 ```bash
+git clone https://github.com/0xHayd3n/anatomy
+cd anatomy
 npm install
 npm run validate   # full content-integrity check (see below)
 ```
@@ -160,9 +157,9 @@ The normative version index is [`spec/CURRENT.md`](spec/CURRENT.md). Current sta
 
 | Package | Version | What it is |
 |---|---|---|
-| [`@anatomy/spec`](package.json) | 1.0.0 | The standard — schema, recommended-stacks reference, canonicalization rules, conformance fixtures. (This repo root.) |
-| [`@anatomy/validate`](anatomy-validate/) | 1.0.0 | Version-routed JSON-schema validator; fingerprint / hash / path checks; cascading tree discovery. |
-| [`@anatomy/cli`](anatomy-cli/) | 1.0.0 | The `anatomy` command — generate, validate, render, migrate, manage the memory log, and serve agents via a Claude Code SessionStart hook or an MCP server. |
+| [`@anatomytool/spec`](https://www.npmjs.com/package/@anatomytool/spec) | 1.0.0 | The standard — schema, recommended-stacks reference, canonicalization rules, conformance fixtures. (This repo root.) |
+| [`@anatomytool/validate`](https://www.npmjs.com/package/@anatomytool/validate) | 1.0.0 | Version-routed JSON-schema validator; fingerprint / hash / path checks; cascading tree discovery. |
+| [`@anatomytool/cli`](https://www.npmjs.com/package/@anatomytool/cli) | 1.0.0 | The `anatomy` command — generate, validate, render, migrate, manage the memory log, and serve agents via a Claude Code SessionStart hook or an MCP server. |
 
 ## Conformance fixtures
 
