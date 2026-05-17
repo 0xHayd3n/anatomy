@@ -45,7 +45,7 @@ There is **no** `"0.3"` wire version.
 
 **Cross-version note:** The per-version schemas in this index use
 `"additionalProperties": false` at the root. This means a consumer running
-`validate()` from `@anatomy/validate` against a v0.15 file correctly routes
+`validate()` from `@anatomytool/validate` against a v0.15 file correctly routes
 to the v0.15 schema and accepts it. However, a consumer that bypasses
 version routing and validates a v0.15 file directly against the v0.14
 schema (e.g., by manually compiling `spec/0.14/schema.json`) will reject
@@ -71,7 +71,7 @@ now considered stable — rather than an incompatibility. Accordingly:
   newer-major files explicitly" does **not** apply to the 0.15→1.0
   transition specifically.
 - All v0.1–v0.15 files remain valid and continue to be routed by
-  `@anatomy/validate`. v1.0 adds a version; it removes nothing.
+  `@anatomytool/validate`. v1.0 adds a version; it removes nothing.
 - Future `1.x` minor versions follow the existing additive-minor policy
   unchanged. The next *breaking* change would be v2.0 under the standard
   major-bump rules.
@@ -90,7 +90,7 @@ A consumer is "v0.3-aware" when it implements:
 - everything required by the v0.2 file format, *and*
 - the cascading discovery and merge semantics in [`0.3/cascading.md`](0.3/cascading.md).
 
-The current ecosystem version exposed by [`@anatomy/validate`](../anatomy-validate/src/index.ts)
+The current ecosystem version exposed by [`@anatomytool/validate`](../anatomy-validate/src/index.ts)
 is `"0.3"`.
 
 ## `.anatomy-memory`
