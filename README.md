@@ -70,7 +70,7 @@ re-deriving them — and knows to flag the file if `commit` has fallen behind
 
 ## What it buys you
 
-Measured in a [cross-repo N=3 eval (2026-05-09)](docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md):
+Measured in a cross-repo N=3 eval (2026-05-09):
 
 - **Citation reliability.** Across 27 cross-repo treatment trials, agents
   cited specific `.anatomy` rules / decisions / flows or `.anatomy-memory`
@@ -182,8 +182,6 @@ validator implementations:
   format version to its schema, canonicalization, prompt, versioning policy,
   and recommended-stacks docs.
 - **CLI reference:** [`anatomy-cli/README.md`](anatomy-cli/README.md).
-- **Design history:** per-version design rationale and implementation plans
-  live in [`docs/`](docs/).
 
 ## Contributing
 
