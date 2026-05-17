@@ -1,77 +1,198 @@
 # Anatomy
 
-A specification for in-repo metadata files (`.anatomy`) and an append-only companion (`.anatomy-memory`) that give AI agents a small, machine-readable corpus of per-repo context they can **cite reliably** — repository identity along four pillars (**Stack**, **Form**, **Domain**, **Function**), uncapturable knowledge (rules, flows, decisions), and lived-experience memory (gotchas, decisions, conventions, attempts).
+> A TOML + memory format that lets AI coding agents cite repo-specific rules and decisions — and detect when that knowledge has gone stale.
 
-What it actually buys you, [from the 2026-05-09 cross-repo N=3 eval](docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md):
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A5%2022-brightgreen.svg)](package.json)
 
-- **Citation reliability.** Across 27 cross-repo treatment trials, agents cited specific `.anatomy` rules / decisions / flows or `.anatomy-memory` entries in 24/27 (89%); baseline was 0/27.
-- **Surfacing system-level facts.** Treatment caught the Verbifex TPM-preflight gate (a system-level rule that doesn't grep cleanly) in 2/3 reps; baseline missed it in 3/3.
-- **Self-detected staleness.** Every read pins to a git commit; consumers see drift between `.anatomy.generated.commit` and `HEAD` and can react.
+AI coding agents have a recurring failure mode: they re-derive the same
+project facts every session, miss system-level rules that don't grep cleanly,
+and trust documentation that has silently drifted from the code.
 
-What it does **not** buy you, on the same eval: faster lookups. Baseline beat or tied treatment on `tool_calls_to_first_evidence` for 8 of 9 cross-repo cells. The original Anatomy-repo headline of −36% wall-clock did not replicate cross-repo. The honest pitch is "machine-readable docs that agents can cite reliably and that detect their own staleness," not "agents are faster."
+**Anatomy** is a small, machine-readable corpus you commit to the repo so
+agents stop guessing. It has two files:
 
-## Status
+- **`.anatomy`** — repository identity along four pillars (**Stack**,
+  **Form**, **Domain**, **Function**) plus the *uncapturable* knowledge an
+  agent can't infer from source: rules, flows, and decisions.
+- **`.anatomy-memory`** — an append-only log of lived experience (gotchas,
+  decisions, conventions, attempts) paired to the `.anatomy` by fingerprint.
 
-Current versions (see [`spec/CURRENT.md`](spec/CURRENT.md) for the normative index):
+Every read pins to a git commit, so consumers can tell when the knowledge no
+longer matches `HEAD` instead of trusting it blindly.
 
-- **`.anatomy` file format:** v1.0 (latest — stabilization of the v0.15 format, structurally identical). v0.1, v0.2, v0.4, v0.5, v0.6, v0.7, v0.8, v0.9, v0.10, v0.11, v0.12, v0.13, v0.14, v0.15 also valid; declared via the `anatomy_version` field. v0.3 is an ecosystem (validator + cascading) release whose per-file format is unchanged from v0.2.
-- **Ecosystem version:** v0.3 — cascading-aware multi-`.anatomy` repos.
-- **`.anatomy-memory` format:** v0.2 (latest). v0.1 still valid; v0.2 adds optional `last_verified_at` and `verified_by` fields for decay tracking.
-- **AGENTS.md emission:** v0.10 (latest format) emits a derived `AGENTS.md` alongside `.anatomy` so [AGENTS.md-aware tools](https://agents.md/) (Codex / GitHub Copilot / Cursor) read the same surface anatomy-aware tools get via MCP. Token-budgeted; honors the optional `[generate]` config.
-- **Rule verification (v0.12+):** Optional `verify` field on each `[[rules]]` entry declares how to check the rule against source. Two glob-based verifier kinds (no dependency), one AST-based kind via optional `@ast-grep/napi`, and (v0.13+) `kind = "semgrep"` for pattern combinators (`pattern-not`, `pattern-inside`), taint mode, and non-JS-family languages via optional `semgrep` CLI on PATH. Surfaces drift between documented rules and actual code.
-- **Packages:** [`@anatomy/spec`](package.json) 1.0.0, [`@anatomy/validate`](anatomy-validate/) 1.0.0, [`@anatomy/cli`](anatomy-cli/) 1.0.0.
+## Contents
 
-## Format
+- [What it looks like](#what-it-looks-like)
+- [What it buys you](#what-it-buys-you)
+- [Install](#install)
+- [Quick start](#quick-start)
+- [Format](#format)
+- [Versions & status](#versions--status)
+- [Packages](#packages)
+- [Conformance fixtures](#conformance-fixtures)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
-`.anatomy` files are TOML 1.0, UTF-8. Top level is grouped: `[identity]`, `[generated]` (both required), and the optional `[operation]` and `[substance]` groups for AI-grade per-repo context.
+## What it looks like
 
-`.anatomy-memory` files are TOML 1.0, UTF-8 with a two-line header (`anatomy_memory_version`, `repo_fingerprint`) followed by `[[entries]]` blocks. Append-only by design.
+This repository describes *itself* with an `.anatomy` file. A trimmed excerpt:
 
-## Documents
+```toml
+anatomy_version = "0.13"
+tagline = "TOML + memory format that lets AI agents cite repo-specific rules/decisions and detect their own staleness."
 
-The normative reference is [`spec/CURRENT.md`](spec/CURRENT.md), which maps each format version to its normative docs (schema, canonicalization, prompt, versioning policy, recommended stacks).
+[identity]
+stack       = "javascript"
+form        = "monorepo"
+domain      = "repo-metadata"
+function    = "ai-context-format"
+fingerprint = "jcevybzm4r897e6rhe11"
 
-Design documents (chronological, latest first):
+[[rules]]
+rule = "Hand-roll TOML output when section order matters; do not use smol-toml.stringify"
+why  = "smol-toml does not preserve insertion order; section order is normative per spec section 5"
 
-- [v0.7 plan](docs/superpowers/plans/2026-05-07-anatomy-v0.7.md) — restructured insights track.
-- [v0.6 plan](docs/superpowers/plans/2026-05-06-dynamic-insights.md) — dynamic insights.
-- [memory v0.1 plan](docs/superpowers/plans/2026-05-08-anatomy-memory.md) — lived-experience layer.
-- [v0.5 design](docs/specs/2026-05-06-anatomy-v0.5-design.md) — code-profile pillar.
-- [v0.4 plan](docs/plans/2026-05-06-anatomy-v0.4-code-profile.md) — code-profile pillar (initial).
-- [v0.3 design](docs/specs/2026-05-06-anatomy-v0.3-design.md) — cascading semantics.
-- [v0.2 design](docs/specs/2026-05-06-anatomy-v0.2-design.md) — additive supersession of v0.1.
-- [v0.1 design](docs/specs/2026-05-05-anatomy-standard-design.md) — original four-pillar standard.
+[[decisions]]
+topic  = "v0.3 is an ecosystem release, not a wire version"
+reason = "v0.3 added cascading discovery + merge semantics for multi-.anatomy repos but did not change the per-file format…"
 
-## Conformance fixtures
+[generated]
+at     = 2026-05-17T04:53:13.000Z
+commit = "948fe0b"            # every read pins here; consumers detect drift vs HEAD
+by     = "anatomy-cli@0.13.0"
+```
 
-`fixtures/` contains the conformance test set consumed by validator implementations. Counts:
+An agent reading this can cite the exact rule and decision rather than
+re-deriving them — and knows to flag the file if `commit` has fallen behind
+`HEAD`.
 
-- **Single-file:** 24 valid, 3 valid-with-warnings, 33 invalid (covering versions 0.1 through 1.0).
-- **Cascading (multi-file):** 2 valid, 1 valid-with-warnings, 2 invalid.
-- **Canonicalization:** 16 cases (11 valid + 5 invalid) in [`fixtures/canonicalization-cases.json`](fixtures/canonicalization-cases.json) driving ID → canonical-form transformation.
+## What it buys you
 
-See [`fixtures/README.md`](fixtures/README.md).
+Measured in a [cross-repo N=3 eval (2026-05-09)](docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md):
 
-## Local development
+- **Citation reliability.** Across 27 cross-repo treatment trials, agents
+  cited specific `.anatomy` rules / decisions / flows or `.anatomy-memory`
+  entries in 24/27 (89%); baseline was 0/27.
+- **Surfacing system-level facts.** Treatment caught a system-level rule that
+  doesn't grep cleanly (a TPM-preflight gate) in 2/3 reps; baseline missed it
+  in 3/3.
+- **Self-detected staleness.** Every read pins to a git commit, so consumers
+  see drift between `.anatomy.generated.commit` and `HEAD` and can react.
+
+> **Honest scope.** The measured win is *citation reliability* and
+> *self-detected staleness* — **not** faster lookups. On the same eval,
+> baseline beat or tied treatment on `tool_calls_to_first_evidence` for 8 of
+> 9 cross-repo cells, and the original single-repo headline of −36%
+> wall-clock did **not** replicate cross-repo. The honest pitch is
+> "machine-readable docs that agents cite reliably and that detect their own
+> staleness," not "agents are faster."
+
+## Install
+
+Not yet published to npm. Install the CLI from source:
+
+```bash
+git clone https://github.com/0xHayd3n/anatomy
+cd anatomy/anatomy-cli
+npm install        # @anatomy/validate auto-builds via its prepare hook
+npm run build      # compile the CLI (tsc → dist/); required, the binary is dist/bin.js
+npm link           # expose `anatomy` on your PATH (optional)
+anatomy --help
+```
+
+Requires **Node.js ≥ 22**.
+
+To work on the spec and conformance fixtures instead, from the repo root:
 
 ```bash
 npm install
-npm run validate
+npm run validate   # full content-integrity check (see below)
 ```
 
-Runs the full content-integrity check: every schema is valid JSON Schema; every recommended-stacks file validates against its meta-schema; every `valid/*` fixture parses (TOML) and validates (JSON Schema) and has correct canonical-form hashes; every `invalid/*` fixture fails with the expected errors (or is a documented `schema_can_detect: false` boundary case); `valid-with-warnings/*` fixtures validate cleanly with their expected warning surface; canonicalization cases produce the documented canonical strings and hashes.
-
-## CLI
-
-[`@anatomy/cli`](anatomy-cli/) is the command-line tool for working with `.anatomy` and `.anatomy-memory` files — generate, validate, render, migrate, manage the lived-experience memory log, and serve the data to AI agents via a Claude Code SessionStart hook or an MCP server.
+## Quick start
 
 ```bash
-npm install -g @anatomy/cli
-anatomy generate && anatomy validate
+anatomy generate          # Pass 1: starter .anatomy from manifest + README + dirs; also writes AGENTS.md
+anatomy generate --ai     # Pass 2: enrich the human-knowledge fields via an AI provider
+anatomy validate          # validate .anatomy (and a sibling .anatomy-memory if present)
+anatomy mcp               # serve it to agents over MCP  (or: anatomy hook)
 ```
 
-**Full command reference and usage:** [`anatomy-cli/README.md`](anatomy-cli/README.md) — the single source of truth for the command surface (kept in sync with `anatomy --help`). This section intentionally does not duplicate it.
+A generated `.anatomy` is TOML you are expected to **hand-edit** — Pass 1
+fills what it can deterministically and leaves `# TODO` markers for the
+human-knowledge fields. The full command reference lives in
+[`anatomy-cli/README.md`](anatomy-cli/README.md), kept in sync with
+`anatomy --help` and intentionally not duplicated here.
+
+## Format
+
+`.anatomy` files are **TOML 1.0, UTF-8**. The top level is grouped:
+`[identity]` and `[generated]` are required; `[operation]` and `[substance]`
+are optional groups for AI-grade per-repo context.
+
+`.anatomy-memory` files are also TOML 1.0, UTF-8, with a two-line header
+(`anatomy_memory_version`, `repo_fingerprint`) followed by `[[entries]]`
+blocks. **Append-only by design** — entries are superseded, never rewritten.
+
+`npm run validate` runs the full content-integrity check: every schema is
+valid JSON Schema; every recommended-stacks file validates against its
+meta-schema; every `valid/*` fixture parses and validates with correct
+canonical-form hashes; every `invalid/*` fixture fails with the expected
+errors (or is a documented `schema_can_detect: false` boundary case);
+`valid-with-warnings/*` fixtures validate cleanly with their expected warning
+surface; and canonicalization cases produce the documented strings and hashes.
+
+## Versions & status
+
+The normative version index is [`spec/CURRENT.md`](spec/CURRENT.md). Current state:
+
+| Surface | Latest | Notes |
+|---|---|---|
+| `.anatomy` file format | **v1.0** | Stabilization of v0.15 — structurally identical; the 0→1 bump is a stability commitment, not a breaking change. v0.1–v0.15 remain valid, declared via `anatomy_version`. |
+| Ecosystem | **v0.3** | Cascading-aware multi-`.anatomy` repos. An ecosystem (validator + cascading) release — the per-file wire format is unchanged from v0.2. |
+| `.anatomy-memory` | **v0.2** | v0.1 still valid; v0.2 adds optional `last_verified_at` / `verified_by` for decay tracking. |
+| AGENTS.md emission | **v0.10** | Emits a derived [`AGENTS.md`](https://agents.md/) (read by Codex / Copilot / Cursor) alongside `.anatomy`. Token-budgeted; honors the optional `[generate]` config. |
+| Rule verification | **v0.12+** | Optional `verify` on each `[[rules]]` entry checks the rule against source. Two glob-based kinds (no dependency), one AST kind via optional `@ast-grep/napi`, and (v0.13+) `kind = "semgrep"` for pattern combinators and non-JS languages via an optional `semgrep` CLI. Surfaces drift between documented rules and actual code. |
+
+## Packages
+
+| Package | Version | What it is |
+|---|---|---|
+| [`@anatomy/spec`](package.json) | 1.0.0 | The standard — schema, recommended-stacks reference, canonicalization rules, conformance fixtures. (This repo root.) |
+| [`@anatomy/validate`](anatomy-validate/) | 1.0.0 | Version-routed JSON-schema validator; fingerprint / hash / path checks; cascading tree discovery. |
+| [`@anatomy/cli`](anatomy-cli/) | 1.0.0 | The `anatomy` command — generate, validate, render, migrate, manage the memory log, and serve agents via a Claude Code SessionStart hook or an MCP server. |
+
+## Conformance fixtures
+
+[`fixtures/`](fixtures/README.md) is the conformance test set consumed by
+validator implementations:
+
+- **Single-file:** 24 valid, 3 valid-with-warnings, 33 invalid (covering
+  versions 0.1 through 1.0).
+- **Cascading (multi-file):** 2 valid, 1 valid-with-warnings, 2 invalid.
+- **Canonicalization:** 16 cases (11 valid + 5 invalid) in
+  [`fixtures/canonicalization-cases.json`](fixtures/canonicalization-cases.json),
+  driving the ID → canonical-form transformation.
+
+## Documentation
+
+- **Normative reference:** [`spec/CURRENT.md`](spec/CURRENT.md) — maps each
+  format version to its schema, canonicalization, prompt, versioning policy,
+  and recommended-stacks docs.
+- **CLI reference:** [`anatomy-cli/README.md`](anatomy-cli/README.md).
+- **Design history:** per-version design rationale and implementation plans
+  live in [`docs/`](docs/).
+
+## Contributing
+
+Issues and pull requests welcome. Before opening a PR, run `npm run validate`
+from the repo root — it is the same content-integrity gate CI enforces, and a
+green run is required to merge. Commits follow the
+[Conventional Commits](https://www.conventionalcommits.org/) style used
+throughout the history.
 
 ## License
 
-MIT
+[MIT](LICENSE)
