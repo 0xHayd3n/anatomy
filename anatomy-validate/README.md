@@ -1,6 +1,6 @@
 # `@anatomy/validate`
 
-TypeScript validator for `.anatomy` and `.anatomy-memory` files. Routes by declared wire version (v0.1, v0.2, v0.4, v0.5, v0.6, v0.7, v0.8) and supports v0.3 cascading semantics for repos with multiple `.anatomy` files.
+TypeScript validator for `.anatomy` and `.anatomy-memory` files. Routes by declared wire version (v0.1, v0.2, v0.4–v0.15, and v1.0) and supports v0.3 cascading semantics for repos with multiple `.anatomy` files.
 
 ## Install
 
@@ -55,12 +55,12 @@ const result = validateMemory(memoryText, {
 ### `.anatomy` (single file)
 
 - **TOML syntax** — parse error → `toml-parse` error.
-- **Schema conformance** — version-routed against `spec/{0.1, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8}/schema.json`. Unknown `anatomy_version` → `unsupported-anatomy-version`.
+- **Schema conformance** — version-routed against `spec/{0.1, 0.2, 0.4–0.15, 1.0}/schema.json`. Unknown `anatomy_version` → `unsupported-anatomy-version`.
 - **Identity integrity** — version-aware:
-  - **v0.7+ (incl. v0.8):** flat 4-string identity + single fingerprint via `fingerprintFromPillars(stack, form, domain, function)` = `Crockford-base32(SHA-256(stack\0form\0domain\0function))[:20]`.
+  - **v0.7–v1.0:** flat 4-string identity + single fingerprint via `fingerprintFromPillars(stack, form, domain, function)` = `Crockford-base32(SHA-256(stack\0form\0domain\0function))[:20]`.
   - **v0.1–v0.6:** per-pillar `hash = canonicalHash(id)`; `fingerprint = concat(stack.hash, form.hash, domain.hash, function.hash)`.
-- **Path checks** — `structure.entries[].path`, `entry_points[].path`, `phrase_with_source.source.{path, symbol}` — soft-warn if missing on disk; nested-path-escape error for paths that climb above `repoRoot/anatomyDir`.
-- **Interface↔form match** — `[interface.exports]` requires a library-shaped form; `[interface.subcommands]` requires a CLI-shaped form; etc.
+- **Path checks** — `structure.entries[].path`, `entry_points[].path` — soft-warn if missing on disk; nested-path-escape error for paths that climb above `repoRoot/anatomyDir`.
+- **Interface↔form match (v0.7–v0.8)** — `[interface.exports]` requires a library-shaped form; `[interface.subcommands]` requires a CLI-shaped form; etc.
 - **Soft warnings** — `description-too-long`, `entry-point-description-deprecated` (v0.2 alias), `commands-no-test` (v0.4+: `[operation.commands]` without a `test` key).
 
 ### `.anatomy-memory` (paired file)
@@ -73,11 +73,12 @@ const result = validateMemory(memoryText, {
 
 ### Rule verification (v0.12+)
 
-Each `[[rules]]` entry may carry an optional `verify` field that declares how to check the rule against actual source. Three kinds:
+Each `[[rules]]` entry may carry an optional `verify` field that declares how to check the rule against actual source. Four kinds:
 
 - `glob_exists` — assert files matching a glob exist (or, with `should_not=true`, don't exist).
 - `glob_only` — assert files matching one glob all live inside another.
 - `ast_pattern` — ast-grep pattern + `expect_in` or `forbid_in` glob. Requires the optional `@ast-grep/napi` dependency.
+- `semgrep` (v0.13+) — Semgrep rule + `expect_in` or `forbid_in` glob, for pattern combinators, taint mode, and non-JS-family languages. Requires the optional `semgrep` CLI on `PATH`.
 
 Example:
 

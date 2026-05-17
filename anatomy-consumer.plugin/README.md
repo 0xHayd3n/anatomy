@@ -1,6 +1,6 @@
 # anatomy-consumer (Claude Code plugin)
 
-Loads `.anatomy` + `.anatomy-memory` into Claude Code's runtime context — both ambient (via a SessionStart hook injecting ~1,200 tokens of identity, rules, decisions, flows, commands, and entry points) and structured (via 11 MCP tools for selective deeper pulls).
+Loads `.anatomy` + `.anatomy-memory` into Claude Code's runtime context — both ambient (via a SessionStart hook injecting ~1,200 tokens of identity, rules, decisions, flows, commands, and entry points) and structured (via 9 MCP tools for selective deeper pulls).
 
 ## Install
 
@@ -10,10 +10,10 @@ Loads `.anatomy` + `.anatomy-memory` into Claude Code's runtime context — both
 /plugin install anatomy-consumer
 ```
 
-You'll need `@anatomy/cli` v0.9.0+ on `PATH` first:
+You'll need `@anatomytool/cli` v1.0.0+ on `PATH` first:
 
 ```bash
-npm install -g @anatomy/cli
+npm install -g @anatomytool/cli
 ```
 
 ### Manual (Cursor, Aider, generic MCP clients)

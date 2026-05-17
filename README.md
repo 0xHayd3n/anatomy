@@ -169,7 +169,7 @@ The normative version index is [`spec/CURRENT.md`](spec/CURRENT.md). Current sta
 [`fixtures/`](fixtures/README.md) is the conformance test set consumed by
 validator implementations:
 
-- **Single-file:** 24 valid, 3 valid-with-warnings, 33 invalid (covering
+- **Single-file:** 34 valid, 3 valid-with-warnings, 43 invalid (covering
   versions 0.1 through 1.0).
 - **Cascading (multi-file):** 2 valid, 1 valid-with-warnings, 2 invalid.
 - **Canonicalization:** 16 cases (11 valid + 5 invalid) in
