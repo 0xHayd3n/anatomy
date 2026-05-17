@@ -1,4 +1,4 @@
-# @anatomy/cli
+# @anatomytool/cli
 
 `anatomy` — the command-line tool for the [Anatomy standard](https://anatomy.dev).
 Generate, validate, and maintain **`.anatomy`** files: a small,
@@ -22,9 +22,9 @@ Cline, Roo, Continue, Windsurf).
 ## Install
 
 ```bash
-npm install -g @anatomy/cli      # provides `anatomy` (and `anatomy-cli`)
+npm install -g @anatomytool/cli      # provides `anatomy` (and `anatomy-cli`)
 # or, without installing:
-npx @anatomy/cli --help
+npx @anatomytool/cli --help
 ```
 
 Requires **Node.js ≥ 22**.
@@ -271,8 +271,8 @@ Other environment knobs: `ANATOMY_HOOK_DISABLE` (silences `anatomy hook`),
 For tools building on top of the CLI:
 
 ```ts
-import { runPass1, renderToml } from "@anatomy/cli";
-import type { Pass1Result } from "@anatomy/cli";
+import { runPass1, renderToml } from "@anatomytool/cli";
+import type { Pass1Result } from "@anatomytool/cli";
 ```
 
 `runPass1` is the deterministic generator (manifest + README + walker →
@@ -283,7 +283,7 @@ normative section ordering preserved.
 
 - The standard, schema, and conformance fixtures: [project README](../README.md)
   and the normative [`spec/CURRENT.md`](../spec/CURRENT.md).
-- Validator library: [`@anatomy/validate`](../anatomy-validate/).
+- Validator library: [`@anatomytool/validate`](https://www.npmjs.com/package/@anatomytool/validate).
 - Design + implementation docs: [`docs/superpowers/`](../docs/superpowers/).
 
 ## License
