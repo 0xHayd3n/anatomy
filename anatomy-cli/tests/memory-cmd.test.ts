@@ -99,20 +99,25 @@ describe("anatomy memory list", () => {
   });
 
   it("filters by --kind", () => {
-    const { root } = makeRepoWithMemory();
+    const { root, ids } = makeRepoWithMemory();
     const r = run(["memory", "list", "--kind", "gotcha"], root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toContain("g1");
-    expect(r.stdout).not.toContain("d1");
-    expect(r.stdout).not.toContain("c1");
+    // Assert on full 8-char entry ids, not 2-char topics: the list table has
+    // a generated Crockford-base32 id column, so a 2-char substring like "d1"
+    // collides with a random id ~0.7%/run (flaked once on macOS CI). ids =
+    // [gotcha, decision, convention] per makeRepoWithMemory's seed order.
+    expect(r.stdout).toContain(ids[0]);
+    expect(r.stdout).not.toContain(ids[1]);
+    expect(r.stdout).not.toContain(ids[2]);
   });
 
   it("filters by --topic substring", () => {
-    const { root } = makeRepoWithMemory();
+    const { root, ids } = makeRepoWithMemory();
     const r = run(["memory", "list", "--topic", "d"], root);
     expect(r.code).toBe(0);
-    expect(r.stdout).toContain("d1");
-    expect(r.stdout).not.toContain("g1");
+    // Same id-collision hazard as --kind above: assert on full ids.
+    expect(r.stdout).toContain(ids[1]);
+    expect(r.stdout).not.toContain(ids[0]);
   });
 
   it("hides deprecated entries by default; shows with --include-superseded", () => {
