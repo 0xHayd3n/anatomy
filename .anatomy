@@ -1,6 +1,6 @@
-anatomy_version = "0.13"
+anatomy_version = "1.0"
 tagline = "TOML + memory format that lets AI agents cite repo-specific rules/decisions and detect their own staleness."
-description = "Monorepo for the Anatomy standard: the TOML spec for `.anatomy` repository-metadata files (organized along four pillars — Stack, Form, Domain, Function) plus an append-only `.anatomy-memory` companion for lived experience, the `@anatomy/cli` tool (validate, generate, MCP server), the `@anatomy/validate` library, a Claude Code consumer plugin, and the conformance fixture suite — together giving AI agents a citable per-repo knowledge surface that pins to a git commit so consumers can detect drift. Empirically (2026-05-09 N=3 cross-repo eval, docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md): treatment cites .anatomy rules/memory entries in 89% of trials vs 0% baseline, surfaces system-level facts that don't grep cleanly, and pays a citation-overhead wall-clock cost that's worth it for cross-file synthesis tasks but not for grep-friendly lookups."
+description = "Monorepo for the Anatomy standard: the TOML spec for `.anatomy` repository-metadata files (organized along four pillars — Stack, Form, Domain, Function) plus an append-only `.anatomy-memory` companion for lived experience, the `@anatomytool/cli` tool (validate, generate, MCP server), the `@anatomytool/validate` library, a Claude Code consumer plugin, and the conformance fixture suite — together giving AI agents a citable per-repo knowledge surface that pins to a git commit so consumers can detect drift. Empirically (2026-05-09 N=3 cross-repo eval, docs/superpowers/specs/2026-05-09-anatomy-consumer-results-cross-repo-N3.md): treatment cites .anatomy rules/memory entries in 89% of trials vs 0% baseline, surfaces system-level facts that don't grep cleanly, and pays a citation-overhead wall-clock cost that's worth it for cross-file synthesis tasks but not for grep-friendly lookups."
 
 [identity]
 stack = "javascript"
@@ -16,12 +16,12 @@ test = "npm run validate"
 
 [[structure.entries]]
 path = "anatomy-cli/"
-purpose = "@anatomy/cli — validate, generate (Pass 1 deterministic + optional Pass 2 AI fill), show, migrate, rehash, memory, mcp"
+purpose = "@anatomytool/cli — validate, generate (Pass 1 + optional Pass 2 AI fill), show, migrate, rehash, memory, mcp"
 kind = "source"
 
 [[structure.entries]]
 path = "anatomy-validate/"
-purpose = "@anatomy/validate — version-routed JSON-schema validator, fingerprint/hash/path checks, cascading tree discovery"
+purpose = "@anatomytool/validate — version-routed JSON-schema validator, fingerprint/hash/path checks, cascading tree discovery"
 kind = "source"
 
 [[structure.entries]]
@@ -136,8 +136,8 @@ render_budget = 3500
 render_memory_count = 6
 
 [generated]
-at = 2026-05-17T04:53:13.000Z
-commit = "948fe0b"
-by = "anatomy-cli@0.13.0"
+at = 2026-05-17T14:44:37.000Z
+commit = "f084c88"
+by = "anatomy-cli@1.0.0"
 model = "none"
-schema = "https://anatomy.dev/spec/0.13/schema.json"
+schema = "https://anatomy.dev/spec/1.0/schema.json"
