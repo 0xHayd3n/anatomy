@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
@@ -366,6 +366,13 @@ describe("anatomy_brief — calibration against this repo", () => {
     expect(ruleHit, "expected spawnSync rule to be surfaced").toBeDefined();
     if (ruleHit) expect(ruleHit.score).toBeGreaterThanOrEqual(0.4);
 
+    // The memory-entry calibration asserts against the dogfooded .anatomy-memory,
+    // which curated checkouts (e.g. the public snapshot) strip. Treat its absence
+    // as a no-op, mirroring the embedder-absent skip above.
+    if (!existsSync(join(repoRoot, ".anatomy-memory"))) {
+      console.warn("[skip] no .anatomy-memory in this checkout; memory-entry calibration is no-op");
+      return;
+    }
     const memHit = data.memory.find(m => m.id === "t9ykw3em");
     expect(memHit, "expected memory entry t9ykw3em to be surfaced").toBeDefined();
   });

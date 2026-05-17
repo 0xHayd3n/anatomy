@@ -1,0 +1,17 @@
+# Normalize all text to LF in the repository and working tree on every OS.
+# Without this, Git for Windows (core.autocrlf=true on CI runners) checks out
+# CRLF, which breaks byte-exact fixture comparisons (renderAgentsMd → \n vs
+# checked-out \r\n in expected-AGENTS.md / .anatomy fixtures).
+* text=auto eol=lf
+
+# Belt-and-suspenders: never touch line endings of known binaries.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary

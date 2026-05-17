@@ -12,11 +12,16 @@ function run(
   cwd: string,
   env: Record<string, string> = {},
 ): { stdout: string; stderr: string; code: number } {
-  const result = spawnSync("node", [BIN, ...args], {
+  // Invoke node by its absolute path with shell:false. The semgrep-unavailable
+  // test runs with PATH="" to make `semgrep` unresolvable inside the CLI; with
+  // shell:true + "node" that empty PATH also makes the shell unable to find
+  // `node` itself, so the process never starts and exits 127 ("not found") on
+  // POSIX CI. process.execPath is PATH-independent (node is a real exe, not a
+  // .cmd shim), so only the in-CLI semgrep lookup is affected, as intended.
+  const result = spawnSync(process.execPath, [BIN, ...args], {
     cwd,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
-    shell: true,
     env: { ...process.env, ...env },
   });
   return {

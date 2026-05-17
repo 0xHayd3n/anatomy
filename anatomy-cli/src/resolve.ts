@@ -5,6 +5,21 @@
 
 import { dirname, relative, resolve as pathResolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
+
+// Canonicalize a path the same way `git rev-parse --show-toplevel` does:
+// resolve symlinks/junctions, macOS /var→/private, and Windows 8.3 short
+// names (e.g. CI's C:\Users\RUNNER~1 → runneradmin). Without this, startDir
+// (raw alias) and the git-derived repoRoot (canonical) disagree, and
+// findAnatomyForPath rejects queryPath as "outside" repoRoot. Falls back to
+// the non-canonical path when it does not exist (callers handle not-found).
+function canonical(p: string): string {
+  try {
+    return realpathSync.native(p);
+  } catch {
+    return p;
+  }
+}
 import {
   findAnatomyForPath,
   validate,
@@ -79,9 +94,9 @@ export async function resolveAnatomy(
   cwd: string,
   opts?: { repoRoot?: string },
 ): Promise<ResolvedAnatomy | ResolveError> {
-  const startDir = pathResolve(cwd);
+  const startDir = canonical(pathResolve(cwd));
   const repoRoot = opts?.repoRoot
-    ? pathResolve(opts.repoRoot)
+    ? canonical(pathResolve(opts.repoRoot))
     : detectRepoRoot(startDir);
 
   let anatomyPath: string | null;
@@ -125,7 +140,19 @@ export async function resolveAnatomy(
     };
   }
 
-  const staleness = await checkStaleness(validateResult.value, repoRoot);
+  // Staleness is best-effort metadata. A shallow CI checkout (the default
+  // actions/checkout fetch-depth=1) lacks the pinned generated.commit, so the
+  // git diff/verify ops in classifyStaleness/verifyRulesAtCommit can throw.
+  // That must never turn a successful resolution into an error — it mirrors
+  // checkStaleness's own "git unavailable → null" contract one layer up, and
+  // is the sole remaining throw site in resolveAnatomy (validate() never
+  // throws per package contract; find/read are already guarded).
+  let staleness: Awaited<ReturnType<typeof checkStaleness>> = null;
+  try {
+    staleness = await checkStaleness(validateResult.value, repoRoot);
+  } catch {
+    staleness = null;
+  }
 
   return {
     anatomy_path: anatomyPath,

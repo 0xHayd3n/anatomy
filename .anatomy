@@ -44,16 +44,6 @@ path = "scripts/"
 purpose = "Spec-package scripts: validate-spec.mjs (content-integrity), canonical.mjs (normative algorithm), fix-fixture-hashes.mjs"
 kind = "scripts"
 
-[[structure.entries]]
-path = "docs/"
-purpose = "Design docs and superpowers plans/specs — chronological per-version design rationale and implementation plans"
-kind = "docs"
-
-[[structure.entries]]
-path = "eval/"
-purpose = "A/B harness measuring whether the anatomy consumer (hook + MCP) helps Claude Code agents — 6 fixed tasks with rubric"
-kind = "tests"
-
 [environment]
 language_version = ">=22"
 runtime = "node"
