@@ -6,7 +6,7 @@ import { describe, it, expect } from "vitest";
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ValidationError } from "@anatomy/validate";
+import type { ValidationError } from "@anatomytool/validate";
 import { runPass1 } from "../src/pass1/index.js";
 import { enrichWithAI } from "../src/pass2/index.js";
 

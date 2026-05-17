@@ -150,7 +150,7 @@ describe("resolveAnatomy", () => {
     execSync('git commit -m "c1"', { cwd: dir, stdio: "ignore", shell: true });
     const c1 = execSync("git rev-parse --short HEAD", { cwd: dir, encoding: "utf8", shell: true }).trim();
     // Hand-write a v0.12 anatomy with rules that have verify clauses.
-    const { fingerprintFromPillars } = await import("@anatomy/validate");
+    const { fingerprintFromPillars } = await import("@anatomytool/validate");
     const fp = fingerprintFromPillars("javascript", "javascript-library", "test", "test");
     const anatomyText = [
       `anatomy_version = "0.12"`,
@@ -174,7 +174,7 @@ describe("resolveAnatomy", () => {
       `[generated]`,
       `at = 2026-05-08T00:00:00.000Z`,
       `commit = "${c1}"`,
-      `by = "@anatomy/cli@test"`,
+      `by = "@anatomytool/cli@test"`,
       `model = "none"`,
       `schema = "https://anatomy.dev/spec/0.12/schema.json"`,
       ``,

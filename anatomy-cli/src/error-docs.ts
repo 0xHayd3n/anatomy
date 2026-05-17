@@ -1,7 +1,7 @@
 // src/error-docs.ts
 // Documentation for every ErrorCode + WarningCode the validator can emit.
 // Surfaced via `anatomy explain <code>`. Hand-maintained — when a new code
-// is added in @anatomy/validate, add its entry here too.
+// is added in @anatomytool/validate, add its entry here too.
 
 export interface ErrorDoc {
   /** Severity. Mirrors the validator's classification. */
@@ -68,7 +68,7 @@ as hash-content-mismatch.`,
     body:
 `The validator implements a fixed set of anatomy_version values (currently
 0.1 and 0.2). A file declaring anything else cannot be routed to a schema.
-Either upgrade the validator (newer @anatomy/validate may know more
+Either upgrade the validator (newer @anatomytool/validate may know more
 versions) or rewrite the file to declare a supported version.`,
   },
   "structure-path-not-found": {
@@ -188,7 +188,7 @@ blocks). The fingerprint MUST match the paired .anatomy's fingerprint —
 `validateMemory currently knows only memory v0.1. A file declaring
 anatomy_memory_version = "X.Y" for an unsupported X.Y is rejected.
 Either downgrade the file's declared version to "0.1" (the format is
-backward-compatible within memory v0.x) or upgrade @anatomy/validate
+backward-compatible within memory v0.x) or upgrade @anatomytool/validate
 to a version that supports the newer memory format.`,
   },
   "memory-fingerprint-mismatch": {

@@ -2,7 +2,7 @@
 // Pre-display safety gate: run a candidate verify clause through verifyCheck
 // and decide whether it's broken (reject) or legitimately reports drift (accept).
 
-import { verifyCheck, type Warning } from "@anatomy/validate";
+import { verifyCheck, type Warning } from "@anatomytool/validate";
 import type { VerifyCandidate, DryRunResult } from "./types.js";
 
 const DEFAULT_TIMEOUT_MS = 3000;

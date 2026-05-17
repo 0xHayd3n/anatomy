@@ -17,7 +17,7 @@ import { telemetryCommand } from "./commands/telemetry-cmd.js";
 import { ingestCommand } from "./commands/ingest.js";
 import { verifySuggestCommand } from "./commands/verify-suggest.js";
 import { setVerbose } from "./log.js";
-import { ECOSYSTEM_VERSION } from "@anatomy/validate";
+import { ECOSYSTEM_VERSION } from "@anatomytool/validate";
 import { PKG_VERSION } from "./version.js";
 
 const HELP = `Usage: anatomy <command> [options]
@@ -225,7 +225,7 @@ async function main(): Promise<number> {
     return 0;
   }
   if (argv[0] === "--version") {
-    console.log(`@anatomy/cli@${PKG_VERSION} (anatomy ecosystem v${ECOSYSTEM_VERSION})`);
+    console.log(`@anatomytool/cli@${PKG_VERSION} (anatomy ecosystem v${ECOSYSTEM_VERSION})`);
     return 0;
   }
   const { cmd, positional, flags } = parseArgs(argv);

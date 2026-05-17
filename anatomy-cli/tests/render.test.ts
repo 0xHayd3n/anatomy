@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runPass1 } from "../src/pass1/index.js";
 import { renderToml, renderAnatomyArtifact } from "../src/render/toml.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 
 const PINNED = "2026-05-06T13:30:00.000Z";
 
@@ -42,7 +42,7 @@ describe("renderToml", () => {
     expect(toml).not.toContain('[[substance');
     expect(toml).not.toContain('why = "todo-why"');
     expect(toml).toMatch(/at = 2026-05-06T13:30:00\.000Z/);
-    expect(toml).toMatch(/by = "@anatomy\/cli@\d+\.\d+\.\d+"/);
+    expect(toml).toMatch(/by = "@anatomytool\/cli@\d+\.\d+\.\d+"/);
   });
 
   it("output validation gate: every Pass 1 → render → validate must succeed", async () => {

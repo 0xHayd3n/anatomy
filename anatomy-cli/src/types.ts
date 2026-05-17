@@ -11,7 +11,7 @@ export type ExportKind = "function" | "class" | "type" | "constant" | "namespace
 
 /** v0.12 [[rules]].verify — optional discriminated-union verify clause.
  *  Carried as-is through the render round-trip; the actual verifier dispatch
- *  lives in @anatomy/validate. */
+ *  lives in @anatomytool/validate. */
 export type VerifyConfig =
   | { kind: "glob_exists"; path: string; should_not?: boolean }
   | { kind: "glob_only"; match: string; container: string }

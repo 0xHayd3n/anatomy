@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { renderCommand } from "../src/commands/render.js";
-import { fingerprintFromPillars } from "@anatomy/validate";
+import { fingerprintFromPillars } from "@anatomytool/validate";
 
 const BIN = resolve(import.meta.dirname, "../dist/bin.js");
 

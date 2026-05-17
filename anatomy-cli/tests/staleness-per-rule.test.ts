@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { classify, parseHits, verifyRulesAtCommit } from "../src/staleness-per-rule.js";
-import type { Warning } from "@anatomy/validate";
+import type { Warning } from "@anatomytool/validate";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

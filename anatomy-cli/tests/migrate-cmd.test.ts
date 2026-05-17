@@ -4,13 +4,13 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { deriveTaglineFromDescription, migrateCommand } from "../src/commands/migrate.js";
-import * as validateMod from "@anatomy/validate";
+import * as validateMod from "@anatomytool/validate";
 
 // vi.mock is hoisted above imports by vitest — safe to reference module-level.
 // Default auto-mock: validate becomes vi.fn() returning undefined.
 // The validation gate test overrides this for one call.
 // Integration tests run in a separate child process and are unaffected.
-vi.mock("@anatomy/validate");
+vi.mock("@anatomytool/validate");
 
 const BIN = resolve(import.meta.dirname, "../dist/bin.js");
 

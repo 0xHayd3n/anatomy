@@ -1,5 +1,5 @@
 {
-  "name": "@anatomy/cli",
+  "name": "@anatomytool/cli",
   "version": "1.0.0",
   "description": "CLI for the Anatomy standard — validate, generate (Pass 1 deterministic + optional Pass 2 AI fill), show (--prose), migrate (v0.1 → v1.0), rehash (in-place fingerprint), explain. Manage paired .anatomy-memory entries (add, list, grep, show, stats, deprecate, thanks, credits). Serve as Claude Code SessionStart hook (anatomy hook) and stdio MCP server (anatomy mcp; 11 tools across section + memory access). Local-only telemetry with ANATOMY_TELEMETRY_DISABLE opt-out.",
   "type": "module",
@@ -34,7 +34,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anatomy/validate": "file:../anatomy-validate",
+    "@anatomytool/validate": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "linguist-js": "^2.9.2",
     "smol-toml": "^1.3.0"

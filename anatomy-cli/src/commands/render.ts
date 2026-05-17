@@ -7,7 +7,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseToml } from "smol-toml";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { renderAll } from "../render/index.js";
 import { writeArtifacts } from "../render/write.js";
 import { unifiedDiff } from "../diff.js";

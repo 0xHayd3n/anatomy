@@ -1,6 +1,6 @@
 // src/errors.ts
 // Public error and warning types. ErrorCode and WarningCode are frozen
-// for v0.1 (adding codes requires a minor bump of @anatomy/validate).
+// for v0.1 (adding codes requires a minor bump of @anatomytool/validate).
 
 export type ErrorCode =
   | "toml-parse-error"

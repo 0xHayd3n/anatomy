@@ -2,10 +2,10 @@
 // Per-rule staleness: re-runs each rule's `verify` clause against HEAD when
 // an anatomy is non-cosmetically stale, classifies each rule, and returns an
 // array surfaced through the MCP envelope. Reuses verifyCheck from
-// @anatomy/validate; no new verifier code.
+// @anatomytool/validate; no new verifier code.
 
-import { verifyCheck } from "@anatomy/validate";
-import type { Warning } from "@anatomy/validate";
+import { verifyCheck } from "@anatomytool/validate";
+import type { Warning } from "@anatomytool/validate";
 
 export type RuleStatus = "passing" | "failing" | "unverified" | "error";
 

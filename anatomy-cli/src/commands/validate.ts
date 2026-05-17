@@ -1,13 +1,13 @@
 // src/commands/validate.ts
-// `anatomy validate [<path>]` — wraps @anatomy/validate's single-file mode.
+// `anatomy validate [<path>]` — wraps @anatomytool/validate's single-file mode.
 // Resolves repoRoot from the validated file's dirname (intentional v0.1
 // behavior; tree-mode workflows use validateTree directly).
 
 import { existsSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { validate, validateMemory } from "@anatomy/validate";
-import type { ValidationError, Warning } from "@anatomy/validate";
+import { validate, validateMemory } from "@anatomytool/validate";
+import type { ValidationError, Warning } from "@anatomytool/validate";
 import { readAnatomyFile, readAnatomyMemoryFile } from "../io.js";
 import { debug } from "../log.js";
 

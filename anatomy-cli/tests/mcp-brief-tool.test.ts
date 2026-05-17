@@ -172,7 +172,7 @@ rule = "unrelated rule alpha"
 describe("anatomy_brief — memory wiring", () => {
   it("returns BM25F-ranked memory entries when query is supplied", async () => {
     _setEmbedderForTesting(null);
-    const { fingerprintFromPillars } = await import("@anatomy/validate");
+    const { fingerprintFromPillars } = await import("@anatomytool/validate");
     const fp = fingerprintFromPillars("javascript", "javascript-library", "test", "test");
     const toml = buildAnatomyToml({});
     writeRepo(toml);
@@ -205,7 +205,7 @@ attribution = "human:test"
 
   it("returns empty memory when no query is supplied", async () => {
     _setEmbedderForTesting(null);
-    const { fingerprintFromPillars } = await import("@anatomy/validate");
+    const { fingerprintFromPillars } = await import("@anatomytool/validate");
     const fp = fingerprintFromPillars("javascript", "javascript-library", "test", "test");
     const toml = buildAnatomyToml({});
     writeRepo(toml);

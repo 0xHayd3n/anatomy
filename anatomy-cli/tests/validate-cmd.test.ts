@@ -59,7 +59,7 @@ describe("validate command", () => {
   it("--version prints version info", () => {
     const r = run(["--version"], process.cwd());
     expect(r.code).toBe(0);
-    expect(r.stdout).toMatch(/@anatomy\/cli@\d+\.\d+\.\d+/);
+    expect(r.stdout).toMatch(/@anatomytool\/cli@\d+\.\d+\.\d+/);
   });
 
   it("--help prints usage", () => {
@@ -147,7 +147,7 @@ repo_fingerprint = "00000000000000000000"
 
   it("accepts memory entries with helped_count + helped_by populated", () => {
     // Regression test: caught a real bug where the CLI's vendored copy of
-    // @anatomy/validate had a stale schema after the helped_count/helped_by
+    // @anatomytool/validate had a stale schema after the helped_count/helped_by
     // fields were added. A pure-CLI test that round-trips `add` → `thanks` →
     // `validate` exercises the full schema path.
     const root = mkdtempSync(join(tmpdir(), "anat-v-thanks-"));

@@ -9,7 +9,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, join, basename } from "node:path";
 import { runPass1 } from "../pass1/index.js";
 import { renderToml } from "../render/toml.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { detectIngestSources, detectParser } from "../ingest/detect.js";
 import { ingestRepo } from "../ingest/index.js";
 import { mergeIngestIntoPass1, placeholderPass1Result } from "../ingest/merge.js";

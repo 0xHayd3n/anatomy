@@ -5,7 +5,7 @@
 import { existsSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { readAnatomyFile } from "../io.js";
 import { debug } from "../log.js";
 import { PKG_VERSION } from "../version.js";

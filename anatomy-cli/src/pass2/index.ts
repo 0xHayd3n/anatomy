@@ -7,7 +7,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ValidationError } from "@anatomy/validate";
+import type { ValidationError } from "@anatomytool/validate";
 import { canonicalize, fingerprintFromPillars } from "../canonical.js";
 import { debug } from "../log.js";
 import type { Pass1Result } from "../types.js";

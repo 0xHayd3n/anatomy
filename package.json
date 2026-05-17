@@ -1,5 +1,5 @@
 {
-  "name": "@anatomy/spec",
+  "name": "@anatomytool/spec",
   "version": "1.0.0",
   "description": "The Anatomy standard — schema, recommended-stacks reference, canonicalization rules, conformance fixtures.",
   "type": "module",

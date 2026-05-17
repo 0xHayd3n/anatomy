@@ -10,7 +10,7 @@ import * as fc from "fast-check";
 import { canonicalize, hash, canonicalHash } from "../src/canonical.js";
 import { runPass1 } from "../src/pass1/index.js";
 import { renderToml } from "../src/render/toml.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 
 describe("canonical (property-based)", () => {
   it("idempotence: canonicalize(canonicalize(s)) === canonicalize(s)", () => {

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { explainCode, listAllCodes } from "../src/error-docs.js";
 
 // Mirror of the ErrorCode + WarningCode unions from
-// @anatomy/validate/src/errors.ts. Cross-checked here so a code added
+// @anatomytool/validate/src/errors.ts. Cross-checked here so a code added
 // to errors.ts without a matching error-docs entry fails CI loudly,
 // instead of silently breaking `anatomy explain`.
 const KNOWN_ERROR_CODES = [
@@ -56,7 +56,7 @@ const KNOWN_WARNING_CODES = [
 ] as const;
 
 describe("error-docs", () => {
-  it("has an entry for every error code in @anatomy/validate", () => {
+  it("has an entry for every error code in @anatomytool/validate", () => {
     const all = listAllCodes();
     for (const code of KNOWN_ERROR_CODES) {
       expect(all, `error code "${code}" is not documented in error-docs.ts`).toContain(code);
@@ -64,7 +64,7 @@ describe("error-docs", () => {
     }
   });
 
-  it("has an entry for every warning code in @anatomy/validate", () => {
+  it("has an entry for every warning code in @anatomytool/validate", () => {
     const all = listAllCodes();
     for (const code of KNOWN_WARNING_CODES) {
       expect(all, `warning code "${code}" is not documented in error-docs.ts`).toContain(code);
@@ -86,10 +86,10 @@ describe("error-docs", () => {
     }
   });
 
-  it("does not document any code unknown to @anatomy/validate", () => {
+  it("does not document any code unknown to @anatomytool/validate", () => {
     const known: string[] = [...KNOWN_ERROR_CODES, ...KNOWN_WARNING_CODES];
     for (const code of listAllCodes()) {
-      expect(known, `error-docs.ts has an entry for "${code}" but it isn't in @anatomy/validate's ErrorCode/WarningCode unions`).toContain(code);
+      expect(known, `error-docs.ts has an entry for "${code}" but it isn't in @anatomytool/validate's ErrorCode/WarningCode unions`).toContain(code);
     }
   });
 });

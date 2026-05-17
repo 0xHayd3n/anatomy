@@ -17,7 +17,7 @@ function makeResult(overrides: Partial<Pass1Result> = {}): Pass1Result {
     substance: { keyDependencies: [] },
     structure: { entries: [] },
     generatedAt: "2026-01-01T00:00:00.000Z",
-    generatorId: "@anatomy/cli@0.7.0",
+    generatorId: "@anatomytool/cli@0.7.0",
     ...overrides,
   };
 }

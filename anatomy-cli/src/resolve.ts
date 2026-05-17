@@ -25,7 +25,7 @@ import {
   validate,
   type AnatomyDoc,
   type Warning,
-} from "@anatomy/validate";
+} from "@anatomytool/validate";
 import { readAnatomyFile } from "./io.js";
 import { classifyStaleness } from "./staleness-significance.js";
 import { verifyRulesAtCommit } from "./staleness-per-rule.js";

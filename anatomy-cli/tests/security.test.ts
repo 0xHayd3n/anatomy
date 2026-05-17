@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { detectNpm } from "../src/pass1/manifest/npm.js";
 import { runPass1 } from "../src/pass1/index.js";
 import { renderToml } from "../src/render/toml.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 
 function makeRepo(): string {
   return mkdtempSync(join(tmpdir(), "anat-sec-"));

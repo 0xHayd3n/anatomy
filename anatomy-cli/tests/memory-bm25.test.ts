@@ -16,7 +16,7 @@ describe("tokenize", () => {
   });
 
   it("preserves @-scoped package identifiers", () => {
-    expect(tokenize("uses @anatomy/cli here")).toEqual(["uses", "@anatomy/cli", "here"]);
+    expect(tokenize("uses @anatomytool/cli here")).toEqual(["uses", "@anatomytool/cli", "here"]);
   });
 
   it("preserves underscores and hyphens", () => {

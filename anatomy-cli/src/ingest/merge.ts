@@ -5,7 +5,7 @@
 //
 // Also exports placeholderPass1Result() for the --no-pass1 escape hatch.
 
-import { fingerprintFromPillars } from "@anatomy/validate";
+import { fingerprintFromPillars } from "@anatomytool/validate";
 import type { Pass1Result, Rule } from "../types.js";
 import type { IngestedRule } from "./types.js";
 
@@ -35,6 +35,6 @@ export function placeholderPass1Result(): Pass1Result {
     substance: { keyDependencies: [] },
     structure: { entries: [] },
     generatedAt: new Date().toISOString(),
-    generatorId: "@anatomy/cli@ingest-no-pass1",
+    generatorId: "@anatomytool/cli@ingest-no-pass1",
   };
 }

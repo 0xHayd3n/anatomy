@@ -24,7 +24,7 @@ jobs:
       - run: npm run validate
 
   validate-package:
-    name: "@anatomy/validate (${{ matrix.os }}, Node ${{ matrix.node }})"
+    name: "@anatomytool/validate (${{ matrix.os }}, Node ${{ matrix.node }})"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -52,7 +52,7 @@ jobs:
       - run: npm test
 
   cli-package:
-    name: "@anatomy/cli (${{ matrix.os }}, Node ${{ matrix.node }})"
+    name: "@anatomytool/cli (${{ matrix.os }}, Node ${{ matrix.node }})"
     needs: validate-package
     runs-on: ${{ matrix.os }}
     strategy:
@@ -67,19 +67,12 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: "npm"
           cache-dependency-path: anatomy-cli/package-lock.json
-      # @anatomy/cli depends on @anatomy/validate via file:; build the latter
-      # first so the file: dep has a dist/ to copy.
-      - name: Install + build @anatomy/validate
-        working-directory: anatomy-validate
-        run: |
-          npm ci
-          npm run build
-      - name: Install @anatomy/cli (with --install-links for portability)
+      - name: Install @anatomytool/cli
         working-directory: anatomy-cli
-        run: npm install --install-links=true
-      - name: Build @anatomy/cli
+        run: npm ci
+      - name: Build @anatomytool/cli
         working-directory: anatomy-cli
         run: npm run build
-      - name: Test @anatomy/cli
+      - name: Test @anatomytool/cli
         working-directory: anatomy-cli
         run: npm test

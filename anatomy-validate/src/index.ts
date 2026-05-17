@@ -1,5 +1,5 @@
 // src/index.ts
-// Public API for @anatomy/validate.
+// Public API for @anatomytool/validate.
 //
 // validate(text, options?) runs a fixed pipeline:
 //   parse → schema → hash → fingerprint → description-warn

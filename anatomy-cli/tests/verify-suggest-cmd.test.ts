@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { fingerprintFromPillars } from "@anatomy/validate";
+import { fingerprintFromPillars } from "@anatomytool/validate";
 import { verifySuggestCommand } from "../src/commands/verify-suggest.js";
 import { buildAnatomyToml } from "./_helpers/fixture.js";
 

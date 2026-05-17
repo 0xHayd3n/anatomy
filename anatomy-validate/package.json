@@ -1,5 +1,5 @@
 {
-  "name": "@anatomy/validate",
+  "name": "@anatomytool/validate",
   "version": "1.0.0",
   "description": "Validator for .anatomy and .anatomy-memory files. Routes wire versions 0.1, 0.2, 0.4–0.15, and 1.0 (v1.0 == v0.15 structurally; the 0→1 bump is a stability commitment) + v0.3 cascading semantics. Identity-integrity is version-aware (v0.7+ flat-pillar fingerprintFromPillars; v0.1–v0.6 per-pillar-hash concat). Path checks: structure-path, source-path, nested-path-escape, interface↔form (v0.7–v0.8). Soft warnings: description-too-long, entry-point-alias, commands-no-test (v0.4+). Source cross-check: unused-dependency-claim + literal-not-in-source. Tree-mode: validateTree, findAnatomyForPath, discoverAllAnatomies, duplicate-fingerprint-in-tree. Memory pipeline: validateMemory + memory-fingerprint + memory-supersession + memory-dangling-ref.",
   "type": "module",

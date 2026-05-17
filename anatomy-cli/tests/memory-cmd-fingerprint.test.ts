@@ -10,7 +10,7 @@ import { mkdtempSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { fingerprintFromPillars } from "@anatomy/validate";
+import { fingerprintFromPillars } from "@anatomytool/validate";
 import { memoryCommand } from "../src/commands/memory.js";
 import { _setEmbedderForTesting } from "../src/embed/index.js";
 import { memoryEmbeddingsPath } from "../src/memory/embed.js";

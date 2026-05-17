@@ -9,7 +9,7 @@ import { runPass1 } from "../pass1/index.js";
 import { renderAll } from "../render/index.js";
 import { writeArtifacts } from "../render/write.js";
 import { BudgetExceededError } from "../render/budget.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { debug } from "../log.js";
 import { listProviders } from "../pass2/providers/index.js";
 

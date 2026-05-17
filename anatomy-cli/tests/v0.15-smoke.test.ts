@@ -3,7 +3,7 @@
 //
 // Goals:
 //   1. Render+validate roundtrip: a Pass1Result with all four v0.15 sections
-//      populated renders to a TOML doc that passes @anatomy/validate cleanly.
+//      populated renders to a TOML doc that passes @anatomytool/validate cleanly.
 //   2. Canonical section order: vocabulary → invariants → anti_patterns →
 //      prerequisites → [generated].
 //   3. Validator routes v0.15 files to the v0.15 schema (no false-positive
@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
 import { parse as parseToml } from "smol-toml";
 import { renderToml } from "../src/render/toml.js";
 import { parsedToPass1Result } from "../src/render/parse-anatomy.js";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import type { Pass1Result } from "../src/types.js";
 
 // Build a Pass1Result that exercises every new v0.15 section plus a
@@ -55,7 +55,7 @@ function richPass1(): Pass1Result {
       { topic: "Streams", why: "Used for sendFile.", link: "https://example.com" },
     ],
     generatedAt: "2026-05-15T00:00:00.000Z",
-    generatorId: "@anatomy/cli@0.0.0-test",
+    generatorId: "@anatomytool/cli@0.0.0-test",
   } as unknown as Pass1Result;
 }
 

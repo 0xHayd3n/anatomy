@@ -6,7 +6,7 @@
 import { existsSync, writeFileSync, renameSync, unlinkSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
-import { validate } from "@anatomy/validate";
+import { validate } from "@anatomytool/validate";
 import { canonicalize, canonicalHash, fingerprintFromPillars } from "../canonical.js";
 import { readAnatomyFile, readAnatomyMemoryFile } from "../io.js";
 import { debug } from "../log.js";

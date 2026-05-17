@@ -5,7 +5,7 @@
 import { resolveAnatomy } from "../resolve.js";
 import { recordTelemetry } from "../telemetry.js";
 import { pillarString } from "../render/identity.js";
-import type { AnatomyDoc } from "@anatomy/validate";
+import type { AnatomyDoc } from "@anatomytool/validate";
 
 export interface HookOptions {
   root?: boolean;

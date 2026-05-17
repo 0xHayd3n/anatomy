@@ -60,7 +60,7 @@ why = "The wire format."
 
 [generated]
 at = "2026-05-15T00:00:00.000Z"
-by = "@anatomy/cli@0.0.0-test"
+by = "@anatomytool/cli@0.0.0-test"
 model = "none"
 schema = "https://anatomy.dev/spec/0.15/schema.json"
 `;

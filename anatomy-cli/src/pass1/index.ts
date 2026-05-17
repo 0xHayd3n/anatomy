@@ -46,7 +46,7 @@ export function runPass1(repoRoot: string): Pass1Result {
     environment,
     interface: interfaceField,
     generatedAt,
-    generatorId: `@anatomy/cli@${PKG_VERSION}`,
+    generatorId: `@anatomytool/cli@${PKG_VERSION}`,
     commit: deriveCommit(repoRoot),
   };
 }

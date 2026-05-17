@@ -19,7 +19,7 @@ function minimalPass1(): Pass1Result {
     // fields. Tests focus on v0.15-gated sections, but the fixture must satisfy
     // the [generated] block to avoid runtime errors.
     generatedAt: "2026-05-14T00:00:00.000Z",
-    generatorId: "@anatomy/cli@0.0.0-test",
+    generatorId: "@anatomytool/cli@0.0.0-test",
   } as unknown as Pass1Result;
 }
 

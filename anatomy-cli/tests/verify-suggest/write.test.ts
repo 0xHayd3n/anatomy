@@ -32,7 +32,7 @@ const BASE = [
   `[generated]`,
   `at = 2026-05-08T00:00:00.000Z`,
   `commit = "abc1234"`,
-  `by = "@anatomy/cli@test"`,
+  `by = "@anatomytool/cli@test"`,
   `model = "none"`,
   `schema = "https://anatomy.dev/spec/0.12/schema.json"`,
   ``,

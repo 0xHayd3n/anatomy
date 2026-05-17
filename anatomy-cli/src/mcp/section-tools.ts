@@ -7,7 +7,7 @@ import { wrapResponse, wrapError, type SuccessEnvelope, type ErrorEnvelope } fro
 import { recordTelemetry } from "../telemetry.js";
 import { pillarString } from "../render/identity.js";
 import { readAnatomyFile } from "../io.js";
-import { discoverAllAnatomies, validate } from "@anatomy/validate";
+import { discoverAllAnatomies, validate } from "@anatomytool/validate";
 import { briefToolHandler, briefToolDefinition } from "./brief-tool.js";
 
 type ToolResult<T> = SuccessEnvelope<T> | ErrorEnvelope;

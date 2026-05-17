@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-vi.mock("@anatomy/validate", () => ({
+vi.mock("@anatomytool/validate", () => ({
   validate: vi.fn().mockResolvedValue({
     ok: false,
     errors: [{ code: "TEST", pointer: "/", message: "mock validation error" }],

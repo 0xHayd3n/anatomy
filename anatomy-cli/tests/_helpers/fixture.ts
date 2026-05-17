@@ -4,7 +4,7 @@
 // Default version is v0.7; pass version: "0.14" (or another supported wire
 // version) to test features added in later versions (e.g. rule verify blocks).
 
-import { fingerprintFromPillars } from "@anatomy/validate";
+import { fingerprintFromPillars } from "@anatomytool/validate";
 
 export interface AnatomyFixtureOpts {
   stack?: string;
@@ -54,7 +54,7 @@ export function buildAnatomyToml(opts: AnatomyFixtureOpts = {}): string {
   lines.push("[generated]");
   lines.push(`at = 2026-05-08T00:00:00.000Z`);
   if (opts.commit) lines.push(`commit = "${opts.commit}"`);
-  lines.push(`by = "@anatomy/cli@test"`);
+  lines.push(`by = "@anatomytool/cli@test"`);
   lines.push(`model = "none"`);
   lines.push(`schema = "https://anatomy.dev/spec/${version}/schema.json"`);
   return lines.join("\n") + "\n";
