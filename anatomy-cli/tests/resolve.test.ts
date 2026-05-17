@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
@@ -7,7 +7,11 @@ import { resolveAnatomy } from "../src/resolve.js";
 import { buildAnatomyToml } from "./_helpers/fixture.js";
 
 function setupRepo(): string {
-  const dir = mkdtempSync(join(tmpdir(), "anat-resolve-"));
+  // resolveAnatomy canonicalizes paths (realpathSync.native) so discovery
+  // works through aliased dirs — CI tmpdir is itself an alias (Windows
+  // RUNNER~1 8.3 short name, macOS /var -> /private). Canonicalize here too,
+  // or the expected-path assertions fail only on those runners.
+  const dir = realpathSync.native(mkdtempSync(join(tmpdir(), "anat-resolve-")));
   execSync("git init", { cwd: dir, stdio: "ignore", shell: true });
   execSync('git config user.email "t@t.com"', { cwd: dir, stdio: "ignore", shell: true });
   execSync('git config user.name "T"', { cwd: dir, stdio: "ignore", shell: true });
