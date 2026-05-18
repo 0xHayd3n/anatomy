@@ -35,7 +35,7 @@ Commands:
                                             --json: emit structured JSON to stdout; human messages to stderr.
   generate [--repo <path>] [--force] [--stdout] [--no-agents-md]
            [--ai] [--rich] [--provider <name>] [--print-prompt] [--providers]
-           [--no-pass2-retry]
+           [--no-pass2-retry] [--model <id>]
            [--no-cursor-mdc] [--no-cursor-rules] [--no-aider]
            [--no-cline] [--no-roo] [--no-continue] [--no-windsurf]
                                             Generate a starter .anatomy from manifest + README + dirs.
@@ -46,6 +46,8 @@ Commands:
                                             dependencies with versions, full description). Implies --ai
                                             and emits the latest .anatomy format version.
                                             --provider <name>: pick a specific Pass 2 provider (implies --ai).
+                                            --model <id>: Pass 2 model (implies --ai). Or set
+                                            ANATOMY_PASS2_MODEL. Default: the provider's own.
                                             --print-prompt: dump the prompt that would be sent to Pass 2 and
                                             exit 0 without calling any provider (implies --ai).
                                             --providers: list registered Pass 2 providers and exit.
@@ -168,6 +170,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (a === "--verbose" || a === "-v") { flags.verbose = true; i++; continue; }
     if (a === "--ai") { flags.ai = true; i++; continue; }
     if (a === "--provider") { flags.provider = argv[++i] ?? ""; i++; continue; }
+    if (a === "--model") { flags.model = argv[++i] ?? ""; i++; continue; }
     if (a === "--print-prompt") { flags.printPrompt = true; i++; continue; }
     if (a === "--providers") { flags.listProviders = true; i++; continue; }
     if (a === "--no-agents-md") { flags.noAgentsMd = true; i++; continue; }
@@ -250,6 +253,7 @@ async function main(): Promise<number> {
         stdout: !!flags.stdout,
         ai: !!flags.ai,
         provider: typeof flags.provider === "string" ? flags.provider : undefined,
+        model: typeof flags.model === "string" ? flags.model : undefined,
         printPrompt: !!flags.printPrompt,
         listProviders: !!flags.listProviders,
         noAgentsMd: !!flags.noAgentsMd,

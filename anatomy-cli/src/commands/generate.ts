@@ -12,6 +12,7 @@ import { BudgetExceededError } from "../render/budget.js";
 import { validate } from "@anatomytool/validate";
 import { debug } from "../log.js";
 import { listProviders } from "../pass2/providers/index.js";
+import { resolveModel } from "../pass2/model.js";
 
 export interface GenerateOptions {
   repo?: string;
@@ -20,6 +21,9 @@ export interface GenerateOptions {
   ai?: boolean;
   /** Override the Pass 2 provider. Implies --ai. */
   provider?: string;
+  /** Pass 2 model override (implies --ai). undefined => provider default.
+   *  Falls back to ANATOMY_PASS2_MODEL when the flag is unset. */
+  model?: string;
   /** Print the prompt that would be sent to Pass 2 (system + user) and
    *  exit 0 without calling any provider. Implies --ai. Useful for plugin
    *  authors verifying their provider against the published contract. */
@@ -46,6 +50,15 @@ export interface GenerateOptions {
   rich?: boolean;
 }
 
+/** Whether Pass 2 (AI enrichment) is implied. `--model` joins the existing
+ *  implications (`--ai`, `--print-prompt`, `--provider`, `--rich`) so the
+ *  user need not pass `--ai` redundantly. Exported for unit testing. */
+export function aiImplied(
+  opts: Pick<GenerateOptions, "ai" | "printPrompt" | "provider" | "rich" | "model">,
+): boolean {
+  return !!opts.ai || !!opts.printPrompt || !!opts.provider || !!opts.rich || !!opts.model;
+}
+
 export async function generateCommand(opts: GenerateOptions): Promise<number> {
   // --providers: enumerate available providers and exit. Pass 1 doesn't run.
   if (opts.listProviders) {
@@ -64,7 +77,8 @@ export async function generateCommand(opts: GenerateOptions): Promise<number> {
 
   // --print-prompt, --provider, and --rich all imply --ai. The user shouldn't
   // have to pass --ai redundantly when they're explicitly invoking Pass 2.
-  const ai = opts.ai || opts.printPrompt || !!opts.provider || !!opts.rich;
+  const ai = aiImplied(opts);
+  const model = resolveModel(opts.model, process.env.ANATOMY_PASS2_MODEL);
 
   // --print-prompt outputs to stdout and never writes a file; skip the
   // overwrite-protection check.
@@ -94,6 +108,7 @@ export async function generateCommand(opts: GenerateOptions): Promise<number> {
         printPromptOnly: opts.printPrompt,
         noRetry: opts.noPass2Retry ?? false,
         rich: opts.rich ?? false,
+        model,
       });
       // --print-prompt: dump system + user prompt and exit 0. No file write.
       if (opts.printPrompt) {
@@ -167,6 +182,7 @@ export async function generateCommand(opts: GenerateOptions): Promise<number> {
         priorErrors,
         noRetry: opts.noPass2Retry ?? false,
         rich: opts.rich ?? false,
+        model,
       });
       pass1 = corrected.result;
       modelId = corrected.modelId;

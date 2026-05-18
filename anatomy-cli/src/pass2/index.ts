@@ -14,6 +14,7 @@ import type { Pass1Result } from "../types.js";
 import { smartTruncateLine } from "../text-utils.js";
 import { buildGitLog, buildTestSample, buildImportSample } from "./context-extras.js";
 import { selectProvider, ProviderError, type Pass2Provider } from "./providers/index.js";
+import { pass2ModelId } from "./model.js";
 import { readExistingAgentsMd } from "./agents-md-input.js";
 
 export interface AiFillResponse {
@@ -770,6 +771,9 @@ export interface EnrichOptions {
    *  repository_url, full description, install/dev commands, and
    *  substance.key_dependencies with versions. v0.14+ schema only. */
   rich?: boolean;
+  /** Override the Pass 2 model. Passed through to ProviderInput.model.
+   *  undefined => provider default (today's behavior). */
+  model?: string;
 }
 
 export interface EnrichResult {
@@ -820,9 +824,10 @@ async function generateWithRetry(
   result: Pass1Result,
   repoRoot: string,
   noRetry: boolean,
+  model?: string,
 ): Promise<string> {
   try {
-    return await provider.generate({ systemPrompt, userPrompt });
+    return await provider.generate({ systemPrompt, userPrompt, model });
   } catch (err) {
     if (noRetry || !(err instanceof ProviderError)) throw err;
     // Only retry on the "claude CLI returned non-zero" class — not auth/quota.
@@ -833,7 +838,7 @@ async function generateWithRetry(
     const trimmedPrompt = `Fill in the TODO fields using the repository context below.\n\n${trimmed}`;
     debug(`pass2: trimmed user prompt is ${trimmedPrompt.length} chars (was ${userPrompt.length})`);
     try {
-      return await provider.generate({ systemPrompt, userPrompt: trimmedPrompt });
+      return await provider.generate({ systemPrompt, userPrompt: trimmedPrompt, model });
     } catch (retryErr) {
       if (retryErr instanceof ProviderError) {
         throw new ProviderError(
@@ -905,6 +910,7 @@ export async function enrichWithAI(
     result,
     repoRoot,
     options.noRetry ?? false,
+    options.model,
   );
   const filled = extractJson(raw);
   debug(`pass2: received fill: domain=${filled.identity_domain}, function=${filled.identity_function}`);
@@ -917,7 +923,7 @@ export async function enrichWithAI(
   // Provider name doubles as a stable model ID until providers expose richer
   // metadata. claude-cli inherits the legacy "claude-code" string for
   // continuity with v0.10-and-earlier .anatomy files.
-  const modelId = provider.name === "claude-cli" ? "claude-code" : provider.name;
+  const modelId = pass2ModelId(provider.name, options.model);
   return { result: enriched, modelId };
 }
 

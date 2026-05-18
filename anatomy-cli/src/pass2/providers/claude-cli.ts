@@ -26,8 +26,14 @@ function isLikelyTimeout(proc: SpawnSyncReturns<string>): boolean {
   return errCode === "ETIMEDOUT" || proc.signal === "SIGTERM";
 }
 
-function spawnClaude(fullPrompt: string): SpawnSyncReturns<string> {
-  return spawnSync(CLAUDE_BIN, ["--print"], {
+/** Argv for the `claude` CLI. `--print` always; `--model <id>` only when a
+ *  model override is in effect. Pure + exported for unit testing. */
+export function claudeArgs(model?: string): string[] {
+  return model ? ["--print", "--model", model] : ["--print"];
+}
+
+function spawnClaude(fullPrompt: string, model?: string): SpawnSyncReturns<string> {
+  return spawnSync(CLAUDE_BIN, claudeArgs(model), {
     input: fullPrompt,
     encoding: "utf8",
     maxBuffer: MAX_BUFFER,
@@ -62,7 +68,7 @@ export const claudeCliProvider: Pass2Provider = {
     const fullPrompt = `${input.systemPrompt}\n\n${input.userPrompt}`;
     let proc: SpawnSyncReturns<string> | undefined;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      proc = spawnClaude(fullPrompt);
+      proc = spawnClaude(fullPrompt, input.model);
       if (!proc.error && proc.status === 0) return proc.stdout;
       // Retry on timeout-class failures only. Genuine spawn errors (ENOENT
       // for missing claude CLI, EACCES for permission denied) and non-zero
