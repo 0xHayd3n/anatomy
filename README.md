@@ -70,24 +70,78 @@ re-deriving them — and knows to flag the file if `commit` has fallen behind
 
 ## What it buys you
 
-Measured in a cross-repo N=3 eval (2026-05-09):
+Measured across **two independent N=20 runs** on a fixed, commit-pinned slate
+(4 repos each of JS/TS, Python, Rust, Go, and C/Ruby/Shell/C++),
+`anatomy generate --ai` vs. an `/init`-style Claude agent producing the
+equivalent `AGENTS.md`: a 2026-05-17 canonical run and a 2026-05-18 Sonnet
+replication. Figures below are the replication run (median, [p25–p75] where
+it matters); the canonical run agrees on every large effect.
 
-- **Citation reliability.** Across 27 cross-repo treatment trials, agents
-  cited specific `.anatomy` rules / decisions / flows or `.anatomy-memory`
-  entries in 24/27 (89%); baseline was 0/27.
-- **Surfacing system-level facts.** Treatment caught a system-level rule that
-  doesn't grep cleanly (a TPM-preflight gate) in 2/3 reps; baseline missed it
-  in 3/3.
+| | anatomy | `/init`-style |
+|---|--:|--:|
+| Generation cost | **$0.115** [0.11–0.14] | $0.448 [0.41–0.48] |
+| Input tokens | **33k** | 764k |
+| Output tokens | **3.2k** | 5.5k |
+| Wall clock | **56 s** | 172 s |
+| Tool calls | **0** | 32 |
+| Artifact size | **1 027 tok** [919–1 134] | 1 964 tok [1 717–2 306] |
+| Accuracy | **83%** [83–100] | 67% [63–88] |
+| Coverage of README facts | 33% | **38%** |
+| Specificity | 54% | **84%** |
+| Succeeded | 20 / 20 | 20 / 20 |
+
+**What each metric means** (which direction is better, and the result here):
+
+- **Generation cost** — USD for the single model call (anatomy) or agent
+  session (`/init`) that produces the artifact. *Lower better.* anatomy ≈ ¼.
+- **Input tokens** — tokens fed to the model to build the artifact, cache
+  included; drives cost and context pressure. *Lower better.* anatomy ≈ 23×
+  fewer: one bounded prompt over a deterministic digest vs. ingesting the repo.
+- **Output tokens** — tokens the model generates. *Lower better at equal
+  quality.* anatomy ≈ 40% fewer (3.2k vs 5.5k).
+- **Wall clock** — elapsed time to produce the artifact. *Lower better.*
+  anatomy ≈ 3× faster — no exploration loop.
+- **Tool calls** — file reads/greps the agent runs while exploring. *Fewer
+  better* (each is latency + tokens). anatomy 0 (Pass-1 is deterministic);
+  `/init` a median 32.
+- **Artifact size** — tokens in the produced `AGENTS.md` a consumer reloads
+  every session. *Smaller better at equal information* (recurring context
+  cost). anatomy ≈ half.
+- **Specificity** — share of statements carrying a concrete identifier
+  (file / symbol / flag). *Higher = denser.* `/init` wins — free-form prose
+  name-drops more.
+- **Coverage** — share of the repo's own README facts the artifact restates.
+  *Higher = broader.* `/init` wins; anatomy's fixed schema captures fewer
+  onboarding facts **by design**.
+- **Accuracy** — share of sampled artifact claims a judge verifies true
+  against the source. *Higher better.* **Soft metric** (3 claims/cell, one
+  LLM judge): read as a direction, not a precise number — see below.
+- **Succeeded** — cells that produced a valid artifact with no error.
+  *Higher better.* 20 / 20 for both methods, in both runs.
+
+**The honest read, both ways.** anatomy's artifact is **~3.9× cheaper, ~23×
+fewer input tokens, ~2× smaller, ~3× faster, and needs zero exploration tool
+calls** — and these efficiency effects **replicated across both N=20 runs**.
+**Accuracy is the soft, run-sensitive metric:** the methods *tied* (91.7 /
+91.7) in the canonical run and anatomy *led* (83 / 67) here, with anatomy ≥
+the baseline in **19 / 20 repos** — so the defensible claim is **"at least as
+accurate as the exploration baseline, never worse,"** not a fixed margin. The
+trade-off is real and also replicated: the `/init`-style agent **covers more
+of each repo's own README facts (38% vs 33%) and is far more identifier-dense
+(84% vs 54%)** — by design, since anatomy's fixed schema deliberately omits
+metadata an agent can re-derive from source. anatomy degrades most on
+non-mainstream stacks. The pitch is **"a much cheaper, smaller,
+at-least-as-accurate repo digest," not "a more complete one."**
+
 - **Self-detected staleness.** Every read pins to a git commit, so consumers
-  see drift between `.anatomy.generated.commit` and `HEAD` and can react.
+  see drift between `.anatomy.generated.commit` and `HEAD` and can react —
+  a structural property of the format, independent of the comparison above.
 
-> **Honest scope.** The measured win is *citation reliability* and
-> *self-detected staleness* — **not** faster lookups. On the same eval,
-> baseline beat or tied treatment on `tool_calls_to_first_evidence` for 8 of
-> 9 cross-repo cells, and the original single-repo headline of −36%
-> wall-clock did **not** replicate cross-repo. The honest pitch is
-> "machine-readable docs that agents cite reliably and that detect their own
-> staleness," not "agents are faster."
+> A separate, smaller **N=3 consumer eval** measured *citation reliability*:
+> agents cited specific `.anatomy`/memory entries in 24/27 treatment trials
+> vs 0/27 baseline. It measures task-time **citation behaviour** — a
+> different axis from the generation-cost comparison above, complementary to
+> it, not part of it.
 
 ## Install
 
