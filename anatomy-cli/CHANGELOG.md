@@ -2,6 +2,32 @@
 
 See the cross-package [root CHANGELOG](../CHANGELOG.md) for ecosystem-level events.
 
+## [1.0.1] — 2026-05-23
+
+### Fixed
+
+- **Pass 2 `claude-cli` provider timeout on medium-large monorepos.** The
+  hardcoded 120s `spawnSync` ceiling tipped over under any IO contention on
+  monorepo-scale prompts (live repro: `mui/material-ui` pass-2 call ~90s,
+  full run ~200s) and the retry conflated pre-launch Windows shim
+  `ETIMEDOUT` (where retry recovers) with post-launch wall-clock `SIGTERM`
+  (where retry burns another 120s on the same prompt against the same
+  model and still misleads the caller with `"claude CLI not found or
+  failed to start"`).
+
+  Changes:
+  - Default raised 120s → 300s. Covers material-ui-class monorepos with
+    headroom; still bounds runaway.
+  - New env override `ANATOMY_CLAUDE_CLI_TIMEOUT_MS` (mirrors the pattern
+    in `ANATOMY_PER_RULE_TIMEOUT_MS` / `ANATOMY_DRY_RUN_TIMEOUT_MS`).
+    Strict `/^\d+$/` digit-only parse with `n > 0` guard (rejects `"0"`
+    which `spawnSync` would otherwise treat as an immediate kill).
+  - Retry policy split: only `ETIMEDOUT` (shim contention) retries.
+    `SIGTERM` (wall-clock) fails fast with a distinct error message that
+    names the env var and the current timeout value.
+
+  Commits: `2bb8762`, `5f0e29d`.
+
 ## [0.13.0] — unreleased
 
 AGENTS.md interop release + the verifier-suggestion + per-rule-staleness

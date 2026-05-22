@@ -70,10 +70,14 @@ describe("claude-cli provider — retry behavior", () => {
   beforeEach(() => {
     mockedSpawnSync.mockReset();
     vi.useFakeTimers();
+    // Ensure no leakage from a developer's local shell — every test owns its
+    // env-var state.
+    delete process.env.ANATOMY_CLAUDE_CLI_TIMEOUT_MS;
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    delete process.env.ANATOMY_CLAUDE_CLI_TIMEOUT_MS;
   });
 
   it("retries on ETIMEDOUT and returns success on second attempt", async () => {
@@ -90,17 +94,20 @@ describe("claude-cli provider — retry behavior", () => {
     expect(mockedSpawnSync).toHaveBeenCalledTimes(2);
   });
 
-  it("retries on SIGTERM (post-launch wall-clock timeout) the same way", async () => {
-    mockedSpawnSync
-      .mockReturnValueOnce(sigtermResult() as ReturnType<typeof spawnSync>)
-      .mockReturnValueOnce(successResult('{"ok":true}') as ReturnType<typeof spawnSync>);
+  it("does NOT retry on SIGTERM (wall-clock timeout — same prompt against same model can't recover)", async () => {
+    mockedSpawnSync.mockReturnValue(sigtermResult() as ReturnType<typeof spawnSync>);
 
-    const promise = claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" });
+    let caught: unknown;
+    const settled = claudeCliProvider
+      .generate({ systemPrompt: "s", userPrompt: "u" })
+      .catch(e => { caught = e; });
     await vi.runAllTimersAsync();
-    const result = await promise;
+    await settled;
 
-    expect(result).toBe('{"ok":true}');
-    expect(mockedSpawnSync).toHaveBeenCalledTimes(2);
+    expect(caught).toBeInstanceOf(ProviderError);
+    expect((caught as Error).message).toMatch(/exceeded \d+ms timeout/);
+    expect((caught as Error).message).toMatch(/ANATOMY_CLAUDE_CLI_TIMEOUT_MS/);
+    expect(mockedSpawnSync).toHaveBeenCalledTimes(1);
   });
 
   it("does NOT retry on non-timeout failures (status != 0 surfaces as ProviderError after one call)", async () => {
@@ -147,5 +154,56 @@ describe("claude-cli provider — retry behavior", () => {
       claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" }),
     ).rejects.toThrowError(ProviderError);
     expect(mockedSpawnSync).toHaveBeenCalledTimes(1);
+  });
+
+  it("honors ANATOMY_CLAUDE_CLI_TIMEOUT_MS env var (passed to spawnSync timeout option)", async () => {
+    process.env.ANATOMY_CLAUDE_CLI_TIMEOUT_MS = "60000";
+    mockedSpawnSync.mockReturnValueOnce(successResult('{"x":1}') as ReturnType<typeof spawnSync>);
+
+    await claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" });
+
+    expect(mockedSpawnSync).toHaveBeenCalledWith(
+      "claude",
+      ["--print"],
+      expect.objectContaining({ timeout: 60000 }),
+    );
+  });
+
+  it("uses 300_000ms default timeout when env var is unset", async () => {
+    mockedSpawnSync.mockReturnValueOnce(successResult('{"x":1}') as ReturnType<typeof spawnSync>);
+
+    await claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" });
+
+    expect(mockedSpawnSync).toHaveBeenCalledWith(
+      "claude",
+      ["--print"],
+      expect.objectContaining({ timeout: 300_000 }),
+    );
+  });
+
+  it("ignores non-numeric env var values and falls back to default", async () => {
+    process.env.ANATOMY_CLAUDE_CLI_TIMEOUT_MS = "not-a-number";
+    mockedSpawnSync.mockReturnValueOnce(successResult('{"x":1}') as ReturnType<typeof spawnSync>);
+
+    await claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" });
+
+    expect(mockedSpawnSync).toHaveBeenCalledWith(
+      "claude",
+      ["--print"],
+      expect.objectContaining({ timeout: 300_000 }),
+    );
+  });
+
+  it("rejects '0' (would be treated as immediate kill by spawnSync) and falls back to default", async () => {
+    process.env.ANATOMY_CLAUDE_CLI_TIMEOUT_MS = "0";
+    mockedSpawnSync.mockReturnValueOnce(successResult('{"x":1}') as ReturnType<typeof spawnSync>);
+
+    await claudeCliProvider.generate({ systemPrompt: "s", userPrompt: "u" });
+
+    expect(mockedSpawnSync).toHaveBeenCalledWith(
+      "claude",
+      ["--print"],
+      expect.objectContaining({ timeout: 300_000 }),
+    );
   });
 });
