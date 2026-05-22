@@ -6,8 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "anatomy": "./dist/bin.js",
-    "anatomy-cli": "./dist/bin.js"
+    "anatomy": "dist/bin.js",
+    "anatomy-cli": "dist/bin.js"
   },
   "exports": {
     ".": {
