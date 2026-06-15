@@ -184,7 +184,11 @@ export const gitHistoryToolDefinitions: ToolDefinition[] = [
 ];
 
 export const gitHistoryToolHandlers: Record<string, ToolHandler> = {
-  git_blame: async (_args) => placeholder("git_blame"),
+  git_blame: async (args) => {
+    const gitBin = resolveGitBin();
+    if (!gitBin) return errorEnvelope("git_unavailable");
+    return runBlame(args as unknown as BlameInput, gitBin, process.cwd());
+  },
   git_log_search: async (_args) => placeholder("git_log_search"),
   git_show: async (_args) => placeholder("git_show"),
 };
@@ -196,5 +200,162 @@ async function placeholder(name: string): Promise<ToolResult> {
   };
 }
 
+const MAX_BLAME_LINES = Number(process.env.ANATOMY_GIT_MAX_BLAME_LINES ?? "500") || 500;
+const MAX_CONTENT_LEN = 500;
+
+interface BlameRecord {
+  line: number;
+  commit: string;
+  author: string;
+  author_date: string;
+  summary: string;
+  content: string;
+}
+
+/** Parse "10-25" or "42". Returns null for malformed input or end < start or start < 1. */
+function parseLines(spec: string): { start: number; end: number } | null {
+  if (!spec) return null;
+  const m = spec.match(/^(\d+)(?:-(\d+))?$/);
+  if (!m) return null;
+  const start = Number(m[1]);
+  const end = m[2] !== undefined ? Number(m[2]) : start;
+  if (start < 1 || end < start) return null;
+  return { start, end };
+}
+
+function truncateContent(s: string): string {
+  return s.length > MAX_CONTENT_LEN ? s.slice(0, MAX_CONTENT_LEN) + "…" : s;
+}
+
+/** Parse `git blame --porcelain` output into structured records.
+ *
+ *  Porcelain format (https://git-scm.com/docs/git-blame#_the_porcelain_format):
+ *  - Group header: "<sha> <orig-line> <final-line> [<num-lines-in-group>]"
+ *  - For the first occurrence of a commit: author/author-mail/author-time/...,
+ *    committer/..., summary, optional previous, filename
+ *  - Then "\t<content>" for the line content
+ *  - Subsequent lines of the same commit group: just the short header
+ *    (no commit-meta block) followed by "\t<content>" */
+function parseBlamePorcelain(input: string): BlameRecord[] {
+  const out: BlameRecord[] = [];
+  const lines = input.split("\n");
+  const commitMeta = new Map<string, { author: string; author_date: string; summary: string }>();
+  let curCommit = "";
+  let curFinalLine = 0;
+  let pendingMeta: { author?: string; author_time?: string; summary?: string } = {};
+
+  for (const line of lines) {
+    if (line.startsWith("\t")) {
+      // Content line — close out the current record.
+      // Materialize any pending meta first (the meta lines precede the content).
+      if (curCommit && pendingMeta.author !== undefined && !commitMeta.has(curCommit)) {
+        commitMeta.set(curCommit, {
+          author: pendingMeta.author ?? "",
+          author_date: pendingMeta.author_time
+            ? new Date(Number(pendingMeta.author_time) * 1000).toISOString()
+            : "",
+          summary: pendingMeta.summary ?? "",
+        });
+        pendingMeta = {};
+      }
+      const meta = commitMeta.get(curCommit);
+      if (curCommit && meta) {
+        out.push({
+          line: curFinalLine,
+          commit: curCommit,
+          author: meta.author,
+          author_date: meta.author_date,
+          summary: meta.summary,
+          content: truncateContent(line.slice(1)),
+        });
+      }
+      continue;
+    }
+    // Group header: "<sha> <orig> <final> [<num>]"
+    const headerMatch = line.match(/^([0-9a-f]{4,40})\s+\d+\s+(\d+)(?:\s+\d+)?$/);
+    if (headerMatch) {
+      curCommit = headerMatch[1];
+      curFinalLine = Number(headerMatch[2]);
+      continue;
+    }
+    // Meta lines.
+    if (line.startsWith("author ")) pendingMeta.author = line.slice("author ".length);
+    else if (line.startsWith("author-time ")) pendingMeta.author_time = line.slice("author-time ".length);
+    else if (line.startsWith("summary ")) pendingMeta.summary = line.slice("summary ".length);
+    // committer-* and other lines: ignored — we only surface author info.
+  }
+  return out;
+}
+
+interface BlameInput {
+  file_path: string;
+  lines?: string;
+  follow?: boolean;
+}
+
+interface BlameResult {
+  matches: BlameRecord[];
+  file: string;
+  truncated: boolean;
+  truncation_reason?: "max_lines";
+}
+
+function errorEnvelope(error: string, extra: Record<string, unknown> = {}): ToolResult {
+  return {
+    content: [{ type: "text", text: JSON.stringify({ error, ...extra }) }],
+    isError: true,
+  };
+}
+
+function okEnvelope(data: unknown): ToolResult {
+  return {
+    content: [{ type: "text", text: JSON.stringify(data) }],
+    isError: false,
+  };
+}
+
+async function runBlame(input: BlameInput, gitBin: string, cwd: string): Promise<ToolResult> {
+  if (typeof input.file_path !== "string" || input.file_path.length === 0) {
+    return errorEnvelope("invalid_input", { field: "file_path", detail: "required" });
+  }
+  let lineRange: { start: number; end: number } | null = null;
+  if (input.lines !== undefined) {
+    lineRange = parseLines(input.lines);
+    if (!lineRange) {
+      return errorEnvelope("invalid_input", {
+        field: "lines",
+        detail: "expected \"10-25\" or \"42\" with positive integers and end >= start",
+      });
+    }
+  }
+  const args = ["blame", "--porcelain"];
+  if (input.follow) args.push("--follow");
+  if (lineRange) args.push("-L", `${lineRange.start},${lineRange.end}`);
+  args.push("--", input.file_path);
+
+  const r = runGit(gitBin, args, cwd);
+  if (r.timedOut) return errorEnvelope("git_timeout", { duration_ms: r.duration_ms });
+  if (r.code !== 0) {
+    const stderr = r.stderr.toLowerCase();
+    if (stderr.includes("no such path") || stderr.includes("does not exist") || stderr.includes("cannot stat")) {
+      return errorEnvelope("file_not_found", { path: input.file_path });
+    }
+    return errorEnvelope("git_command_failed", { detail: r.stderr.slice(0, 500) });
+  }
+  let records = parseBlamePorcelain(r.stdout);
+  let truncated = false;
+  if (records.length > MAX_BLAME_LINES) {
+    records = records.slice(0, MAX_BLAME_LINES);
+    truncated = true;
+  }
+  const result: BlameResult = {
+    matches: records,
+    file: input.file_path,
+    truncated,
+  };
+  if (truncated) result.truncation_reason = "max_lines";
+  return okEnvelope(result);
+}
+
 /** Exposed for testing only. Do NOT import from outside this package. */
-export const _internal = { runGit };
+export const _internal = { runGit, parseLines, parseBlamePorcelain };
