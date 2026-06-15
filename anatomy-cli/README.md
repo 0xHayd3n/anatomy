@@ -234,6 +234,36 @@ mode / non-JS-family languages (optional `semgrep` CLI on PATH).
   exposes both. Without the flag, the napi probe never runs and anatomy
   mcp behaves byte-identically to v1.1.0.
 
+- **`anatomy mcp --with-git-history`** — opt-in flag that exposes three
+  read-only git query tools — `git_blame`, `git_log_search`, `git_show` —
+  inside anatomy's MCP namespace. Pure shellout to the local `git` binary
+  via `spawnSync`; no subprocess lifecycle, no in-process lib.
+
+  - **Tool surface.**
+    - `git_blame` — who last touched each line. Pass `lines: "10-25"` to scope.
+    - `git_log_search` — find commits by content change (pickaxe), commit
+      message (regex), or path filter. `kind` discriminator picks the axis.
+    - `git_show` — metadata + file list for one commit; optional truncated
+      patch via `with_diff: true`.
+  - **Hard fail on missing git or non-repo cwd.** `--with-git-history`
+    exits 1 with an actionable error if git isn't on PATH or the cwd
+    isn't inside a git work-tree.
+  - **Strictly read-only.** No commit, checkout, reset, push — the tool
+    surface makes it structurally impossible.
+  - **Bounded output.** Every tool has a hard cap; truncation sets
+    `truncated: true` + `truncation_reason`.
+
+  | Env | Purpose | Default |
+  |---|---|---|
+  | `ANATOMY_GIT_BIN` | Override the path to the git binary. | (resolve via `PATH`) |
+  | `ANATOMY_GIT_MAX_BLAME_LINES` | Cap on `git_blame` output. | `500` |
+  | `ANATOMY_GIT_MAX_LOG_COMMITS` | Cap on `git_log_search` results. | `100` |
+  | `ANATOMY_GIT_MAX_DIFF_BYTES` | Cap on `git_show` patch body. | `4096` |
+  | `ANATOMY_GIT_TIMEOUT_MS` | Per-call timeout for git. | `5000` |
+
+  Composes with `--with-fff` and `--with-ast-grep`. Without the flag, no
+  git probe runs and behaviour is byte-identical to v1.2.0.
+
 ### Telemetry
 
 - **`anatomy telemetry stats`** / **`anatomy telemetry clear`** — summarize
