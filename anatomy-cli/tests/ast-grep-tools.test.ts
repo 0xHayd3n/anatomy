@@ -229,3 +229,59 @@ describe("ast_grep_search — end-to-end", () => {
     }
   });
 });
+
+describe("ast_grep_search — error paths", () => {
+  it("returns missing_pattern when pattern is missing", async () => {
+    const r = await handlers.ast_grep_search({});
+    expect(r.isError).toBe(true);
+    const data = JSON.parse(r.content[0].text);
+    expect(data.error).toBe("missing_pattern");
+  });
+
+  it("returns missing_pattern when pattern is an empty string", async () => {
+    const r = await handlers.ast_grep_search({ pattern: "" });
+    expect(r.isError).toBe(true);
+    const data = JSON.parse(r.content[0].text);
+    expect(data.error).toBe("missing_pattern");
+  });
+
+  it("returns missing_lang_or_file_path when neither is set", async () => {
+    const r = await handlers.ast_grep_search({ pattern: "$X" });
+    expect(r.isError).toBe(true);
+    const data = JSON.parse(r.content[0].text);
+    expect(data.error).toBe("missing_lang_or_file_path");
+    expect(data.supported_langs).toEqual(expect.arrayContaining(["ts", "py", "rs"]));
+  });
+
+  it("returns missing_lang_or_file_path when file_path has unknown extension", async () => {
+    const r = await handlers.ast_grep_search({
+      pattern: "$X",
+      file_path: "src/**/*.xyz",
+    });
+    expect(r.isError).toBe(true);
+    const data = JSON.parse(r.content[0].text);
+    expect(data.error).toBe("missing_lang_or_file_path");
+  });
+
+  it("returns pattern_parse_failed for an unparseable pattern", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "astgrep-bad-"));
+    writeFileSync(join(dir, "a.ts"), "const x = 1;\n");
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      // Whitespace-only pattern → napi rejects with "No AST root is detected".
+      // Non-empty (so it passes the missing_pattern guard) but unparseable.
+      const r = await handlers.ast_grep_search({
+        pattern: "   ",
+        file_path: "*.ts",
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBe(true);
+      expect(data.error).toBe("pattern_parse_failed");
+      expect(data.language).toBe("ts");
+      expect(typeof data.detail).toBe("string");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+});
