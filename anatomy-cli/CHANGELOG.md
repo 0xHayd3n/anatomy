@@ -2,6 +2,56 @@
 
 See the cross-package [root CHANGELOG](../CHANGELOG.md) for ecosystem-level events.
 
+## [1.1.0] — 2026-06-15
+
+### Added
+
+- **`anatomy mcp --with-fff`: opt-in MCP bridge to
+  [fff](https://github.com/dmtrKovalenko/fff).** When the flag is set,
+  `anatomy mcp` additionally spawns the `fff-mcp` server as a child stdio
+  subprocess and proxies every tool it advertises (currently `find_files`,
+  `grep`, `multi_grep`) inside anatomy's own MCP namespace. The agent now
+  sees both layers — anatomy's curated rules / decisions / memory **and**
+  fff's resident in-memory file index — from one MCP endpoint. The bridge
+  carries the spec's "pure additive proxy" contract:
+  - Tool responses are forwarded verbatim — no wrapping, enrichment, or
+    schema changes. Calling `find_files` through anatomy returns the same
+    bytes as calling `fff-mcp` directly.
+  - Without `--with-fff` the behaviour of `anatomy mcp` is byte-identical
+    to v1.0.1 — no new imports load, no PATH lookup runs, the tool catalog
+    stays at the 9 anatomy-native tools.
+  - Configured via three optional env vars:
+    `ANATOMY_FFF_BIN` (binary path; defaults to `fff` on `PATH`),
+    `ANATOMY_FFF_ARGS` (space-split argv; default empty —
+    `fff-mcp` takes no subcommand), `ANATOMY_FFF_TIMEOUT_MS` (per-call
+    timeout; default `5000`).
+  - **Failure semantics:** hard-fail at startup if the binary is missing
+    or the MCP handshake fails (exit code 1, actionable stderr). A
+    mid-session child crash triggers one transparent respawn; a second
+    crash transitions the bridge into a terminal `degraded` state — fff
+    tools return `fff_unavailable` while anatomy's own tools keep
+    serving. Per-call hangs past the timeout return `fff_timeout` and
+    count toward the restart budget.
+  - **Telemetry:** two new variants on the existing telemetry stream —
+    `fff_bridge_lifecycle` (state transitions: `started` / `restarted`
+    / `degraded` / `stopped`) and `fff_call` (per-tool-call duration +
+    outcome).
+  - **Tool-name collision check:** startup hard-fails if any tool fff
+    advertises shadows an anatomy-native name, surfacing future API
+    drift as an explicit error instead of silent shadowing.
+
+### Notes
+
+- Performance on this repo, 20 cold queries, ripgrep vs fff-mcp warm:
+  ripgrep median 106 ms / query, fff-mcp warm 2.4 ms / query; including
+  fff's one-time ~110 ms index warmup, fff-via-bridge is ~13× faster
+  end-to-end than ripgrep over a typical agent session. Bridge overhead
+  vs direct fff: ~0.8 ms per call, ~26% relative but absolute noise
+  next to ripgrep's per-call fork cost. Bench harness:
+  `anatomy-cli/bench-fff-vs-grep.mjs`.
+- No new runtime dependencies. The bridge reuses
+  `@modelcontextprotocol/sdk` already present for the server side.
+
 ## [1.0.1] — 2026-05-23
 
 ### Fixed

@@ -169,6 +169,7 @@ anatomy generate          # Pass 1: starter .anatomy from manifest + README + di
 anatomy generate --ai     # Pass 2: enrich the human-knowledge fields via an AI provider
 anatomy validate          # validate .anatomy (and a sibling .anatomy-memory if present)
 anatomy mcp               # serve it to agents over MCP  (or: anatomy hook)
+anatomy mcp --with-fff    # additionally proxy fff's fast file-search tools (see below)
 ```
 
 A generated `.anatomy` is TOML you are expected to **hand-edit** — Pass 1
@@ -176,6 +177,52 @@ fills what it can deterministically and leaves `# TODO` markers for the
 human-knowledge fields. The full command reference lives in
 [`anatomy-cli/README.md`](anatomy-cli/README.md), kept in sync with
 `anatomy --help` and intentionally not duplicated here.
+
+### Pairing with fff for fast in-session search
+
+`anatomy mcp --with-fff` spawns [`fff-mcp`](https://github.com/dmtrKovalenko/fff)
+as a child stdio subprocess and proxies every tool it advertises (currently
+`find_files`, `grep`, `multi_grep`) inside anatomy's MCP namespace. The agent
+sees both layers — anatomy's curated rules/decisions/memory **and** fff's
+resident in-memory file index — from one MCP endpoint, no double-wiring.
+
+```bash
+# 1. Install fff. Pre-built binaries are on the project's GitHub releases:
+#    https://github.com/dmtrKovalenko/fff/releases
+#    Download the fff-mcp-<platform> binary and put it on your PATH as `fff`
+#    (or point ANATOMY_FFF_BIN at its full path).
+# 2. Then start the anatomy MCP server with the bridge enabled:
+anatomy mcp --with-fff
+```
+
+| Env | Purpose | Default |
+|---|---|---|
+| `ANATOMY_FFF_BIN` | Override the path to the `fff-mcp` binary. | resolve via `PATH` |
+| `ANATOMY_FFF_ARGS` | Space-split argv passed to the binary at spawn. | (none — `fff-mcp` takes no subcommand) |
+| `ANATOMY_FFF_TIMEOUT_MS` | Per-`tools/call` timeout in milliseconds. | `5000` |
+
+Without `--with-fff`, the behaviour of `anatomy mcp` is byte-identical to
+earlier versions — no fff discovery runs, no extra imports are loaded. The
+bridge is **opt-in only**.
+
+**Why pair them?** anatomy answers "what should I know about this repo?"
+(curated rules, decisions, lived memory). fff answers "where is X?"
+(sub-millisecond file/content search via a resident index). On a 20-query
+agent session, fff is roughly an order of magnitude faster than cold
+ripgrep (the latency floor for grep-style search tools); anatomy's bridge
+adds ≤1 ms per call on top, so the combined endpoint matches direct-fff
+performance within noise. A bench harness lives at
+[`anatomy-cli/bench-fff-vs-grep.mjs`](anatomy-cli/bench-fff-vs-grep.mjs) —
+run it locally with `ANATOMY_FFF_BIN` set to verify on your own repo.
+
+**Failure semantics:** if `fff` isn't on PATH (or `ANATOMY_FFF_BIN` points
+at nothing), `anatomy mcp --with-fff` hard-fails on startup with an
+actionable error. A mid-session fff crash triggers one transparent
+respawn; a second crash marks fff tools unavailable for the rest of the
+session while anatomy's own tools keep serving. Per-call timeouts are
+configurable via `ANATOMY_FFF_TIMEOUT_MS`. Telemetry events
+(`fff_bridge_lifecycle`, `fff_call`) land in `~/.anatomy/telemetry.jsonl`
+alongside the existing `mcp_call` stream.
 
 ## Format
 

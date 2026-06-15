@@ -100,7 +100,15 @@ Commands:
                                             Append a memory entry. Read content from stdin if "-" passed,
                                             or open $EDITOR when content arg is omitted.
                                             Kinds: gotcha | decision | convention | attempt | milestone
-  mcp                                       Start an MCP stdio server exposing 10 tools for AI agents.
+  mcp [--with-fff]                          Start an MCP stdio server exposing anatomy's tools.
+                                            --with-fff: also proxy fff's tools (ffgrep, fffind) via
+                                            a child fff-mcp subprocess. Hard-fails if no fff
+                                            binary is on PATH. ANATOMY_FFF_BIN overrides the binary
+                                            path (point at fff-mcp; binary takes no args by default);
+                                            ANATOMY_FFF_ARGS sets argv for the rare binary that needs
+                                            a subcommand (default: none);
+                                            ANATOMY_FFF_TIMEOUT_MS overrides the per-call timeout
+                                            (default 5000).
   memory list [--kind <k>] [--topic <s>]
               [--ref <s>] [--tag <t>]
               [--include-superseded]
@@ -182,6 +190,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (a === "--no-continue") { flags.noContinue = true; i++; continue; }
     if (a === "--no-windsurf") { flags.noWindsurf = true; i++; continue; }
     if (a === "--no-pass2-retry") { flags.noPass2Retry = true; i++; continue; }
+    if (a === "--with-fff") { flags.withFff = true; i++; continue; }
     if (a === "--refresh-registry") { flags.refreshRegistry = true; i++; continue; }
     if (a === "--rich") { flags.rich = true; i++; continue; }
     if (a === "--no-pass1") { flags.noPass1 = true; i++; continue; }
@@ -340,7 +349,7 @@ async function main(): Promise<number> {
         onlyFresh: !!flags.onlyFresh,
       });
     case "mcp":
-      return mcpCommand();
+      return mcpCommand({ withFff: !!flags.withFff });
     case "telemetry":
       return telemetryCommand(positional, {});
     case "verify": {

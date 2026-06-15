@@ -180,6 +180,33 @@ mode / non-JS-family languages (optional `semgrep` CLI on PATH).
   `anatomy verify suggest` to author the clauses interactively, then surface
   per-rule drift on every MCP read.
 
+- **`anatomy mcp --with-fff`** — opt-in flag that additionally spawns
+  [`fff-mcp`](https://github.com/dmtrKovalenko/fff) as a child MCP subprocess
+  and exposes every tool it advertises (as of fff 0.9.x: `find_files`,
+  `grep`, `multi_grep`) inside anatomy's MCP namespace. Anatomy is both an
+  MCP server to the agent and an MCP client to `fff` in the same process,
+  so the agent gets curated repo knowledge AND fast file search from one
+  endpoint. The bridge is name-agnostic — whatever the installed `fff-mcp`
+  binary advertises is what the agent sees.
+
+  - **Hard fail on missing binary.** If `fff` is not on `PATH` (or
+    `ANATOMY_FFF_BIN` points at a missing file), `anatomy mcp --with-fff`
+    exits 1 with an actionable error.
+  - **One-shot restart, then degrade.** A first child crash triggers a
+    transparent respawn. A second crash marks `fff` tools unavailable for
+    the rest of the session; anatomy's own tools keep serving.
+  - **Per-call timeout.** A forwarded call that doesn't return within
+    `ANATOMY_FFF_TIMEOUT_MS` (default 5000) returns `fff_timeout`.
+
+  | Env | Purpose | Default |
+  |---|---|---|
+  | `ANATOMY_FFF_BIN` | Override the path to the `fff-mcp` binary. | (resolve via `PATH`) |
+  | `ANATOMY_FFF_ARGS` | Space-split argv passed to the binary at spawn. fff ships as a dedicated `fff-mcp` server that takes no subcommand. | (none) |
+  | `ANATOMY_FFF_TIMEOUT_MS` | Per-`tools/call` timeout in milliseconds. | `5000` |
+
+  Without `--with-fff`, the behaviour of `anatomy mcp` is byte-identical to
+  earlier versions — no new dependencies are loaded, no discovery runs.
+
 ### Telemetry
 
 - **`anatomy telemetry stats`** / **`anatomy telemetry clear`** — summarize

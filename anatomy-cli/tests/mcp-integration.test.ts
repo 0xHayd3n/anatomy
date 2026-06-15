@@ -79,3 +79,42 @@ describe("anatomy mcp (integration)", () => {
     expect(parsed.data.tagline).toBe("integration test fixture");
   });
 });
+
+describe("anatomy mcp --with-fff", () => {
+  it("hard-fails with an actionable error when fff is not on PATH", () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-fff-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    let stderr = "";
+    let exitCode = 0;
+    try {
+      execSync(`node "${BIN}" mcp --with-fff`, {
+        cwd: repoDir,
+        env: {
+          ...process.env,
+          ANATOMY_FFF_BIN: "C:/definitely/not/a/real/path/to/fff.exe",
+          ANATOMY_TELEMETRY_DISABLE: "1",
+        },
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
+      });
+    } catch (e) {
+      const err = e as { status?: number; stderr?: Buffer };
+      exitCode = err.status ?? 0;
+      stderr = err.stderr?.toString() ?? "";
+    }
+    expect(exitCode).toBe(1);
+    expect(stderr).toMatch(/fff not found/i);
+  });
+
+  it("regression: anatomy mcp without --with-fff still advertises the anatomy-native tool count", async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-noflag-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+    const [resp] = await spawnAndCall(repoDir, [
+      { jsonrpc: "2.0", id: 1, method: "tools/list" },
+    ]);
+    expect((resp as { result: { tools: unknown[] } }).result.tools.length).toBe(9);
+  });
+});

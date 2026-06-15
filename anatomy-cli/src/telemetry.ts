@@ -59,6 +59,18 @@ export type TelemetryRecord =
       quit_mid_session: boolean;
       duration_ms: number;
       repo_fingerprint: string;
+    }
+  | {
+      kind: "fff_bridge_lifecycle";
+      ts: string;
+      event: "started" | "restarted" | "degraded" | "stopped";
+    }
+  | {
+      kind: "fff_call";
+      ts: string;
+      tool: string;
+      duration_ms: number;
+      outcome: "ok" | "restarted" | "unavailable" | "timeout" | "error";
     };
 
 function telemetryDir(): string {
