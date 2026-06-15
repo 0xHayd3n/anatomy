@@ -53,8 +53,8 @@ rule = "Schema additions within a major version must be additive — consumers r
 why = "spec/0.2/versioning-policy.md is normative for all v0.x; consumer-side breakage forces simultaneous upgrades"
 
 [[rules]]
-rule = "spawnSync calls to git or external CLIs must pass shell: true on Windows for .cmd shim resolution"
-why = "memory entry t9ykw3em — npm-installed CLIs don't resolve as plain executables on Windows"
+rule = "spawnSync to an external CLI by name (string-literal command) must pass shell: true on Windows for .cmd shim resolution; do NOT pass shell: true when invoking an already-resolved absolute path — the shell mis-splits paths with spaces like 'C:\\Program Files\\Git\\cmd\\git.exe'"
+why = "memory entry t9ykw3em — npm-installed CLIs need shim resolution via the shell. The 2026-06-15 --with-git-history work surfaced the opposite case: spawnSync(gitBin, ...) where gitBin is a resolved absolute .exe path fails under shell: true because the shell tokenizes on the space inside 'Program Files'"
 verify = { kind = "semgrep", rule_file = ".semgrep/spawn-without-shell-true.yml", forbid_in = "anatomy-cli/src/**/*.ts" }
 
 [[rules]]

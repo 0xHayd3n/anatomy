@@ -1,10 +1,21 @@
 rules:
   - id: spawn-sync-without-shell-true
-    message: spawnSync to git or external CLIs must pass shell:true on Windows for .cmd shim resolution. See the project rule in .anatomy.
+    message: |
+      spawnSync to an external CLI by name (string-literal first argument)
+      must pass shell:true on Windows for .cmd shim resolution. See the
+      project rule in .anatomy. Note: when the first argument is a
+      *resolved absolute path* (a variable holding the output of `where`/
+      `command -v`), shell:true must NOT be passed — it tokenizes on
+      spaces inside paths like 'C:\Program Files\...'. The pattern below
+      only flags the by-name (string-literal) case.
     severity: WARNING
     languages: [typescript, javascript]
-    pattern: spawnSync(...)
+    pattern: spawnSync("...", ...)
     pattern-not: |
-      spawnSync(..., { ..., shell: true, ... })
+      spawnSync("...", { ..., shell: true, ... })
     pattern-not: |
-      spawnSync(..., { ..., shell: $X, ... })
+      spawnSync("...", { ..., shell: $X, ... })
+    pattern-not: |
+      spawnSync("...", [...], { ..., shell: true, ... })
+    pattern-not: |
+      spawnSync("...", [...], { ..., shell: $X, ... })
