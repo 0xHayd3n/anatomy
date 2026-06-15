@@ -3,6 +3,85 @@
 // `anatomy mcp` is invoked with --with-git-history. See
 // docs/superpowers/specs/2026-06-15-anatomy-mcp-with-git-history-design.md.
 
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+
+const DEFAULT_TIMEOUT_MS = 5000;
+
+/** Resolve the path to the git binary. Checks ANATOMY_GIT_BIN first, then
+ *  PATH via `where`/`command -v`. Returns null on failure. Respects
+ *  ANATOMY_GIT_DISABLE=1 (forces null — test hook for the no-git case). */
+export function resolveGitBin(): string | null {
+  const disable = process.env.ANATOMY_GIT_DISABLE;
+  if (disable && disable !== "0" && disable.toLowerCase() !== "false") return null;
+  const envBin = process.env.ANATOMY_GIT_BIN;
+  if (envBin && envBin.length > 0) return existsSync(envBin) ? envBin : null;
+  try {
+    const cmd = process.platform === "win32" ? "where git" : "command -v git";
+    const r = spawnSync(cmd, {
+      stdio: ["ignore", "pipe", "ignore"],
+      shell: true,
+      encoding: "utf8",
+    });
+    if (r.status !== 0) return null;
+    const first = r.stdout.split(/\r?\n/)[0]?.trim();
+    return first && existsSync(first) ? first : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Returns true iff the given cwd is inside a git work-tree.
+ *  No `shell: true` — gitBin is an already-resolved absolute path to the .exe.
+ *  Passing it through a shell would mis-split a path containing spaces
+ *  (e.g. `C:\Program Files\Git\cmd\git.exe`). The memory note about
+ *  shell:true applies to .cmd shim resolution, not to invoking a real .exe. */
+export function probeRepo(gitBin: string, cwd: string): boolean {
+  const r = spawnSync(gitBin, ["rev-parse", "--is-inside-work-tree"], {
+    cwd,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+    timeout: DEFAULT_TIMEOUT_MS,
+  });
+  return r.status === 0 && r.stdout.trim() === "true";
+}
+
+interface GitResult {
+  code: number;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+  duration_ms: number;
+}
+
+/** Run git with the given args in the given cwd. No `shell: true`: gitBin
+ *  is an already-resolved absolute path; passing it through a shell breaks
+ *  paths with spaces. See probeRepo for the same reasoning. */
+function runGit(gitBin: string, args: string[], cwd: string): GitResult {
+  const timeoutMs = Number(process.env.ANATOMY_GIT_TIMEOUT_MS ?? "5000") || 5000;
+  const t0 = Date.now();
+  const r = spawnSync(gitBin, args, {
+    cwd,
+    stdio: ["ignore", "pipe", "pipe"],
+    encoding: "utf8",
+    timeout: timeoutMs,
+    maxBuffer: 16 * 1024 * 1024, // 16 MB; git log on big repos can be large
+  });
+  const duration_ms = Date.now() - t0;
+  // spawnSync sets `error` when the child was killed by timeout. On POSIX
+  // `signal` is "SIGTERM"; on Windows error.code === "ETIMEDOUT".
+  const timedOut = r.error !== undefined
+    ? (r.error as NodeJS.ErrnoException).code === "ETIMEDOUT" || r.signal === "SIGTERM"
+    : false;
+  return {
+    code: r.status ?? 1,
+    stdout: r.stdout ?? "",
+    stderr: r.stderr ?? "",
+    timedOut,
+    duration_ms,
+  };
+}
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -116,3 +195,6 @@ async function placeholder(name: string): Promise<ToolResult> {
     isError: true,
   };
 }
+
+/** Exposed for testing only. Do NOT import from outside this package. */
+export const _internal = { runGit };

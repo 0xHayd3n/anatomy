@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { recordTelemetry } from "../src/telemetry.js";
-import { gitHistoryToolDefinitions, gitHistoryToolHandlers } from "../src/mcp/git-history-tools.js";
+import { gitHistoryToolDefinitions, gitHistoryToolHandlers, _internal, resolveGitBin, probeRepo } from "../src/mcp/git-history-tools.js";
+import { mkdtempSync, writeFileSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { execSync } from "node:child_process";
 
 describe("git_history_call telemetry shape", () => {
   it("accepts a git_history_call record", () => {
@@ -58,5 +62,83 @@ describe("git-history-tools scaffold", () => {
     expect(typeof gitHistoryToolHandlers.git_blame).toBe("function");
     expect(typeof gitHistoryToolHandlers.git_log_search).toBe("function");
     expect(typeof gitHistoryToolHandlers.git_show).toBe("function");
+  });
+});
+
+describe("resolveGitBin", () => {
+  it("returns a path when git is on PATH", () => {
+    const bin = resolveGitBin();
+    expect(bin).toBeTruthy();
+    expect(existsSync(bin!)).toBe(true);
+  });
+
+  it("honors ANATOMY_GIT_BIN if it points at an existing file", () => {
+    const bin = resolveGitBin();
+    expect(bin).toBeTruthy();
+    const oldEnv = process.env.ANATOMY_GIT_BIN;
+    try {
+      process.env.ANATOMY_GIT_BIN = bin!;
+      expect(resolveGitBin()).toBe(bin);
+    } finally {
+      if (oldEnv === undefined) delete process.env.ANATOMY_GIT_BIN;
+      else process.env.ANATOMY_GIT_BIN = oldEnv;
+    }
+  });
+
+  it("returns null if ANATOMY_GIT_BIN points at a missing file", () => {
+    const oldEnv = process.env.ANATOMY_GIT_BIN;
+    try {
+      process.env.ANATOMY_GIT_BIN = "C:/definitely/not/git.exe";
+      expect(resolveGitBin()).toBeNull();
+    } finally {
+      if (oldEnv === undefined) delete process.env.ANATOMY_GIT_BIN;
+      else process.env.ANATOMY_GIT_BIN = oldEnv;
+    }
+  });
+
+  it("returns null when ANATOMY_GIT_DISABLE is truthy", () => {
+    const oldEnv = process.env.ANATOMY_GIT_DISABLE;
+    try {
+      process.env.ANATOMY_GIT_DISABLE = "1";
+      expect(resolveGitBin()).toBeNull();
+    } finally {
+      if (oldEnv === undefined) delete process.env.ANATOMY_GIT_DISABLE;
+      else process.env.ANATOMY_GIT_DISABLE = oldEnv;
+    }
+  });
+});
+
+describe("probeRepo", () => {
+  it("returns true inside a git work-tree", () => {
+    const bin = resolveGitBin()!;
+    const dir = mkdtempSync(join(tmpdir(), "githist-probe-"));
+    execSync("git init", { cwd: dir, stdio: "ignore", shell: true });
+    expect(probeRepo(bin, dir)).toBe(true);
+  });
+
+  it("returns false outside a git work-tree", () => {
+    const bin = resolveGitBin()!;
+    const dir = mkdtempSync(join(tmpdir(), "githist-noprobe-"));
+    expect(probeRepo(bin, dir)).toBe(false);
+  });
+});
+
+describe("runGit", () => {
+  it("returns stdout + exit 0 for a successful command", () => {
+    const bin = resolveGitBin()!;
+    const dir = mkdtempSync(join(tmpdir(), "githist-run-"));
+    execSync("git init", { cwd: dir, stdio: "ignore", shell: true });
+    const r = _internal.runGit(bin, ["rev-parse", "--is-inside-work-tree"], dir);
+    expect(r.code).toBe(0);
+    expect(r.stdout.trim()).toBe("true");
+    expect(r.timedOut).toBe(false);
+  });
+
+  it("captures stderr + non-zero exit for a failing command", () => {
+    const bin = resolveGitBin()!;
+    const dir = mkdtempSync(join(tmpdir(), "githist-fail-"));
+    const r = _internal.runGit(bin, ["rev-parse", "--is-inside-work-tree"], dir);
+    expect(r.code).not.toBe(0);
+    expect(r.stderr.length).toBeGreaterThan(0);
   });
 });
