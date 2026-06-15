@@ -2,6 +2,52 @@
 
 See the cross-package [root CHANGELOG](../CHANGELOG.md) for ecosystem-level events.
 
+## [1.3.0] — 2026-06-15
+
+### Added
+
+- **`anatomy mcp --with-git-history`: in-process git query extension.**
+  Third optional MCP extension on `anatomy mcp`, sibling to `--with-fff`
+  and `--with-ast-grep` but architecturally simpler than both: pure
+  per-call `spawnSync` shellouts to the local `git` binary, no
+  long-running subprocess, no in-process library binding. The agent can
+  now answer the time-axis verb (*"when did X change and why?"*) that
+  the prior extensions structurally cannot.
+  - **Tool surface.** Three read-only tools:
+    - `git_blame { file_path, lines?, follow? }` — per-line
+      `{ commit, author, author_date, summary, content }`, capped at 500
+      lines (configurable).
+    - `git_log_search { kind: "pickaxe" | "message" | "path", query?, limit?, since?, until?, author? }`
+      — commits matching the chosen axis, with metadata + file list,
+      default limit 30, hard ceiling 100.
+    - `git_show { commit, with_diff? }` — full commit metadata + file
+      list with status/numstat; optional truncated patch.
+  - **Strictly read-only.** No mutating operations (commit, checkout,
+    reset, push, pull, fetch, branch -d). Tool inputs are narrowly typed
+    — there is no `command` parameter.
+  - **Composes with prior extensions.**
+    `anatomy mcp --with-fff --with-ast-grep --with-git-history` exposes
+    the full union (16 tools: 9 anatomy + 3 fff + 1 ast-grep + 3 git).
+  - **Hard fail at startup** if `git` is not on PATH or cwd is not
+    inside a git work-tree. No degraded mode (unlike `--with-fff`).
+  - **Bounded output everywhere.** Every tool has a hard cap with
+    `truncated: true` + `truncation_reason` semantics.
+  - **Telemetry.** New `git_history_call` variant on the existing
+    `~/.anatomy/telemetry.jsonl` stream. No lifecycle events.
+  - **Configuration.** `ANATOMY_GIT_BIN`, `ANATOMY_GIT_MAX_BLAME_LINES`
+    (500), `ANATOMY_GIT_MAX_LOG_COMMITS` (100),
+    `ANATOMY_GIT_MAX_DIFF_BYTES` (4096), `ANATOMY_GIT_TIMEOUT_MS` (5000).
+    `ANATOMY_GIT_DISABLE` forces the loader to act as if git is missing
+    (test hook).
+
+### Notes
+
+- No new runtime dependencies. The tool shells out to whatever `git` is
+  already installed (resolved via PATH or `ANATOMY_GIT_BIN`). Install
+  footprint unchanged from v1.2.0.
+- Without `--with-git-history`, `anatomy mcp` behaviour is byte-identical
+  to v1.2.0 — no git probe runs, no new modules import.
+
 ## [1.2.0] — 2026-06-15
 
 ### Added
