@@ -341,6 +341,12 @@ verify = { kind = "glob_exists", path = "src/**/*.ts" }
 });
 
 describe("anatomy_brief — calibration against this repo", () => {
+  // 30s ceiling: the calibration test loads @xenova/transformers (a real
+  // ~80MB ONNX model + WASM init), which under parallel-pool pressure can
+  // easily exceed the default 5s vitest timeout — exactly the flakiness
+  // pattern documented in project_public_snapshot_divergence cont.7. The
+  // fff-bridge work added test files that pushed total CI parallel load
+  // over the threshold (run 27541603335 timed out across all 6 cli jobs).
   it("query 'semgrep windows shell' surfaces the spawnSync rule + memory entry", async () => {
     _setEmbedderForTesting(undefined); // use the real embedder if installed
     _clearBriefCacheForTesting();
@@ -375,7 +381,7 @@ describe("anatomy_brief — calibration against this repo", () => {
     }
     const memHit = data.memory.find(m => m.id === "t9ykw3em");
     expect(memHit, "expected memory entry t9ykw3em to be surfaced").toBeDefined();
-  });
+  }, 30_000);
 });
 
 describe("anatomy_brief — cache behavior", () => {
