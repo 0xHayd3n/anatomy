@@ -189,7 +189,11 @@ export const gitHistoryToolHandlers: Record<string, ToolHandler> = {
     if (!gitBin) return errorEnvelope("git_unavailable");
     return runBlame(args as unknown as BlameInput, gitBin, process.cwd());
   },
-  git_log_search: async (_args) => placeholder("git_log_search"),
+  git_log_search: async (args) => {
+    const gitBin = resolveGitBin();
+    if (!gitBin) return errorEnvelope("git_unavailable");
+    return runLogSearch(args as unknown as LogSearchInput, gitBin, process.cwd());
+  },
   git_show: async (_args) => placeholder("git_show"),
 };
 
@@ -287,6 +291,40 @@ function parseBlamePorcelain(input: string): BlameRecord[] {
   return out;
 }
 
+const MAX_LOG_COMMITS = Number(process.env.ANATOMY_GIT_MAX_LOG_COMMITS ?? "100") || 100;
+const DEFAULT_LOG_LIMIT = 30;
+const MAX_FILES_PER_COMMIT = 20;
+
+interface LogCommit {
+  commit: string;
+  author: string;
+  date: string;
+  summary: string;
+  files: string[];
+}
+
+/** Parse `git log -z --format=%H%n%an%n%aI%n%s --name-only` output.
+ *  Records are separated by NUL; within each record, the first four lines
+ *  are the format fields and the remainder are filenames. */
+function parseLogOutput(input: string): LogCommit[] {
+  if (!input) return [];
+  const records = input.split("\0").filter((r) => r.trim().length > 0);
+  const out: LogCommit[] = [];
+  for (const rec of records) {
+    const lines = rec.split("\n").filter((l) => l.length > 0);
+    if (lines.length < 4) continue;
+    const [commit, author, date, summary, ...files] = lines;
+    out.push({
+      commit,
+      author,
+      date,
+      summary,
+      files: files.slice(0, MAX_FILES_PER_COMMIT),
+    });
+  }
+  return out;
+}
+
 interface BlameInput {
   file_path: string;
   lines?: string;
@@ -357,5 +395,65 @@ async function runBlame(input: BlameInput, gitBin: string, cwd: string): Promise
   return okEnvelope(result);
 }
 
+interface LogSearchInput {
+  kind: "pickaxe" | "message" | "path";
+  query?: string;
+  limit?: number;
+  since?: string;
+  until?: string;
+  author?: string;
+}
+
+interface LogSearchResult {
+  commits: LogCommit[];
+  truncated: boolean;
+  truncation_reason?: "max_commits";
+}
+
+async function runLogSearch(input: LogSearchInput, gitBin: string, cwd: string): Promise<ToolResult> {
+  if (input.kind !== "pickaxe" && input.kind !== "message" && input.kind !== "path") {
+    return errorEnvelope("invalid_input", { field: "kind", detail: "expected pickaxe | message | path" });
+  }
+  // pickaxe + message require a non-empty query; path allows it to be omitted.
+  if ((input.kind === "pickaxe" || input.kind === "message")
+      && (typeof input.query !== "string" || input.query.length === 0)) {
+    return errorEnvelope("invalid_input", { field: "query", detail: `required for kind=${input.kind}` });
+  }
+  const limit = Math.min(
+    Math.max(1, Math.floor(input.limit ?? DEFAULT_LOG_LIMIT)),
+    MAX_LOG_COMMITS,
+  );
+  // Fetch one extra to detect truncation.
+  const fetchLimit = limit + 1;
+  const args = [
+    "log",
+    "-z",
+    "--format=%H%n%an%n%aI%n%s",
+    "--name-only",
+    `--max-count=${fetchLimit}`,
+  ];
+  if (input.kind === "pickaxe") args.push("-S", input.query!);
+  else if (input.kind === "message") args.push("--grep", input.query!);
+  if (input.since) args.push("--since", input.since);
+  if (input.until) args.push("--until", input.until);
+  if (input.author) args.push("--author", input.author);
+  if (input.kind === "path") {
+    args.push("--");
+    if (input.query) args.push(input.query);
+  }
+
+  const r = runGit(gitBin, args, cwd);
+  if (r.timedOut) return errorEnvelope("git_timeout", { duration_ms: r.duration_ms });
+  if (r.code !== 0) {
+    return errorEnvelope("git_command_failed", { detail: r.stderr.slice(0, 500) });
+  }
+  const all = parseLogOutput(r.stdout);
+  const truncated = all.length > limit;
+  const commits = all.slice(0, limit);
+  const result: LogSearchResult = { commits, truncated };
+  if (truncated) result.truncation_reason = "max_commits";
+  return okEnvelope(result);
+}
+
 /** Exposed for testing only. Do NOT import from outside this package. */
-export const _internal = { runGit, parseLines, parseBlamePorcelain };
+export const _internal = { runGit, parseLines, parseBlamePorcelain, parseLogOutput };

@@ -314,3 +314,133 @@ describe("git_blame — end-to-end", () => {
     }
   });
 });
+
+describe("parseLogOutput", () => {
+  it("parses a single commit with one file", () => {
+    const input = "abc1234567890abcdef1234567890abcdef123456\nAlice\n2026-01-01T12:00:00Z\nfirst\nfile1.ts\n\0";
+    const out = _internal.parseLogOutput(input);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      commit: "abc1234567890abcdef1234567890abcdef123456",
+      author: "Alice",
+      date: "2026-01-01T12:00:00Z",
+      summary: "first",
+      files: ["file1.ts"],
+    });
+  });
+
+  it("parses multiple commits with multiple files each", () => {
+    const input =
+      "aaa1\nAlice\n2026-01-02T12:00:00Z\nsecond\nfile1.ts\nfile2.ts\n\0" +
+      "bbb2\nBob\n2026-01-01T12:00:00Z\nfirst\nfile1.ts\n\0";
+    const out = _internal.parseLogOutput(input);
+    expect(out).toHaveLength(2);
+    expect(out[0].files).toEqual(["file1.ts", "file2.ts"]);
+    expect(out[1].author).toBe("Bob");
+  });
+
+  it("caps the per-commit file list", () => {
+    const files = Array.from({ length: 30 }, (_, i) => `f${i}.ts`).join("\n");
+    const input = `aaa1\nAlice\n2026-01-01T12:00:00Z\nfirst\n${files}\n\0`;
+    const out = _internal.parseLogOutput(input);
+    expect(out[0].files.length).toBeLessThanOrEqual(20);
+  });
+
+  it("handles empty input (no matches)", () => {
+    expect(_internal.parseLogOutput("")).toEqual([]);
+  });
+});
+
+function setupLogRepo(): string {
+  const dir = mkdtempSync(join(tmpdir(), "githist-log-"));
+  execSync("git init", { cwd: dir, stdio: "ignore", shell: true });
+  execSync('git config user.email "test@example.com"', { cwd: dir, stdio: "ignore", shell: true });
+  execSync('git config user.name "Test User"', { cwd: dir, stdio: "ignore", shell: true });
+  writeFileSync(join(dir, "a.ts"), "const x = 1;\n");
+  execSync("git add a.ts", { cwd: dir, stdio: "ignore", shell: true });
+  execSync('git commit -m "add a.ts"', { cwd: dir, stdio: "ignore", shell: true });
+  writeFileSync(join(dir, "a.ts"), "const x = 1;\nconst y = 2;\n");
+  execSync("git add a.ts", { cwd: dir, stdio: "ignore", shell: true });
+  execSync('git commit -m "feat: add y to a.ts"', { cwd: dir, stdio: "ignore", shell: true });
+  writeFileSync(join(dir, "b.ts"), "const z = 3;\n");
+  execSync("git add b.ts", { cwd: dir, stdio: "ignore", shell: true });
+  execSync('git commit -m "fix: introduce b.ts"', { cwd: dir, stdio: "ignore", shell: true });
+  return dir;
+}
+
+describe("git_log_search — end-to-end", () => {
+  it("kind=message: finds commits whose message matches the query", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_log_search({ kind: "message", query: "feat:" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.commits).toHaveLength(1);
+      expect(data.commits[0].summary).toContain("add y to a.ts");
+      expect(data.commits[0].commit).toMatch(/^[0-9a-f]{40}$/);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("kind=path: finds commits touching a path", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_log_search({ kind: "path", query: "a.ts" });
+      const data = JSON.parse(r.content[0].text);
+      expect(data.commits.length).toBeGreaterThanOrEqual(2);
+      // Newest first.
+      expect(data.commits[0].summary).toContain("add y to a.ts");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("kind=pickaxe: finds commits where the string appears or disappears", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_log_search({ kind: "pickaxe", query: "const y" });
+      const data = JSON.parse(r.content[0].text);
+      expect(data.commits).toHaveLength(1);
+      expect(data.commits[0].summary).toContain("add y to a.ts");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("respects the limit and sets truncated when capped", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_log_search({ kind: "message", query: ".", limit: 1 });
+      const data = JSON.parse(r.content[0].text);
+      expect(data.commits).toHaveLength(1);
+      expect(data.truncated).toBe(true);
+      expect(data.truncation_reason).toBe("max_commits");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("rejects missing query for pickaxe", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_log_search({ kind: "pickaxe" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBe(true);
+      expect(data.error).toBe("invalid_input");
+      expect(data.field).toBe("query");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+});
