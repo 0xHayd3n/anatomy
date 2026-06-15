@@ -71,6 +71,17 @@ export type TelemetryRecord =
       tool: string;
       duration_ms: number;
       outcome: "ok" | "restarted" | "unavailable" | "timeout" | "error";
+    }
+  | {
+      kind: "ast_grep_call";
+      ts: string;
+      tool: "ast_grep_search";
+      lang: string;
+      files_scanned: number;
+      matches: number;
+      truncated: boolean;
+      duration_ms: number;
+      outcome: "ok" | "missing_pattern" | "missing_lang_or_file_path" | "pattern_parse_failed" | "error";
     };
 
 function telemetryDir(): string {
