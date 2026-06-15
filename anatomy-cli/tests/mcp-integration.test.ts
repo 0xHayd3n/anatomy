@@ -169,6 +169,33 @@ describe("anatomy mcp --with-ast-grep", () => {
     expect(tools).toContain("ast_grep_search");
     expect(tools).toHaveLength(10);
   });
+
+  it("ast_grep_search round-trips through MCP and returns matches", { timeout: 30_000 }, async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-ast-roundtrip-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+    writeFileSync(
+      join(repoDir, "a.ts"),
+      "console.log('alpha');\nconsole.log('beta');\nconsole.error('gamma');\n",
+    );
+
+    const [resp] = await spawnAstGrep(repoDir, [
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: {
+          name: "ast_grep_search",
+          arguments: { pattern: "console.log($X)", file_path: "*.ts" },
+        },
+      },
+    ]);
+    const text = (resp as { result: { content: Array<{ text: string }> } }).result.content[0].text;
+    const data = JSON.parse(text);
+    expect(data.matches).toHaveLength(2);
+    expect(data.language).toBe("ts");
+    expect(data.matches[0].captures.X).toBe("'alpha'");
+  });
 });
 
 async function spawnAstGrep(repoDir: string, requests: JsonRpcRequest[]): Promise<unknown[]> {
