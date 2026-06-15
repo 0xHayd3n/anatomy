@@ -82,6 +82,14 @@ export type TelemetryRecord =
       truncated: boolean;
       duration_ms: number;
       outcome: "ok" | "missing_pattern" | "missing_lang_or_file_path" | "pattern_parse_failed" | "error";
+    }
+  | {
+      kind: "git_history_call";
+      ts: string;
+      tool: "git_blame" | "git_log_search" | "git_show";
+      duration_ms: number;
+      truncated: boolean;
+      outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "not_a_git_repository" | "error";
     };
 
 function telemetryDir(): string {
