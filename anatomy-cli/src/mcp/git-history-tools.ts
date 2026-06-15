@@ -194,7 +194,11 @@ export const gitHistoryToolHandlers: Record<string, ToolHandler> = {
     if (!gitBin) return errorEnvelope("git_unavailable");
     return runLogSearch(args as unknown as LogSearchInput, gitBin, process.cwd());
   },
-  git_show: async (_args) => placeholder("git_show"),
+  git_show: async (args) => {
+    const gitBin = resolveGitBin();
+    if (!gitBin) return errorEnvelope("git_unavailable");
+    return runShow(args as unknown as ShowInput, gitBin, process.cwd());
+  },
 };
 
 async function placeholder(name: string): Promise<ToolResult> {
@@ -395,6 +399,70 @@ async function runBlame(input: BlameInput, gitBin: string, cwd: string): Promise
   return okEnvelope(result);
 }
 
+const MAX_DIFF_BYTES = Number(process.env.ANATOMY_GIT_MAX_DIFF_BYTES ?? "4096") || 4096;
+
+interface ShowFile {
+  path: string;
+  status: "M" | "A" | "D" | "R" | "C" | "T" | "U" | "X" | "B";
+  additions: number;
+  deletions: number;
+}
+
+interface ShowMetadata {
+  commit: string;
+  parents: string[];
+  author: string;
+  date: string;
+  message: string;
+}
+
+/** Parse NUL-delimited %H\0%P\0%an\0%aI\0%B output from `git show --no-patch`.
+ *  Returns null if fewer than 5 NUL fields are present. */
+function parseShowMetadata(input: string): ShowMetadata | null {
+  const trimmed = input.replace(/[\r\n]+$/, "");
+  const parts = trimmed.split("\0");
+  if (parts.length < 5) return null;
+  const [commit, parentsStr, author, date, ...messageParts] = parts;
+  const message = messageParts.join("\0");
+  const parents = parentsStr.trim().length > 0 ? parentsStr.trim().split(/\s+/) : [];
+  return { commit, parents, author, date, message };
+}
+
+/** Parse combined --name-status + --numstat output. First block is one line
+ *  per file with a status code; second block is one line per file with
+ *  additions/deletions/path. Joined by path. */
+function parseShowFiles(input: string): ShowFile[] {
+  const statusByPath = new Map<string, ShowFile["status"]>();
+  const statsByPath = new Map<string, { additions: number; deletions: number }>();
+  for (const line of input.split("\n")) {
+    if (!line) continue;
+    const numstatMatch = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
+    if (numstatMatch) {
+      const [, addS, delS, path] = numstatMatch;
+      statsByPath.set(path, {
+        additions: addS === "-" ? 0 : Number(addS),
+        deletions: delS === "-" ? 0 : Number(delS),
+      });
+      continue;
+    }
+    const renameMatch = line.match(/^([RC])(\d+)?\t(.+)\t(.+)$/);
+    if (renameMatch) {
+      statusByPath.set(renameMatch[4], renameMatch[1] as ShowFile["status"]);
+      continue;
+    }
+    const statusMatch = line.match(/^([MADTUXB])\t(.+)$/);
+    if (statusMatch) {
+      statusByPath.set(statusMatch[2], statusMatch[1] as ShowFile["status"]);
+    }
+  }
+  const out: ShowFile[] = [];
+  for (const [path, status] of statusByPath) {
+    const stats = statsByPath.get(path) ?? { additions: 0, deletions: 0 };
+    out.push({ path, status, ...stats });
+  }
+  return out;
+}
+
 interface LogSearchInput {
   kind: "pickaxe" | "message" | "path";
   query?: string;
@@ -455,5 +523,85 @@ async function runLogSearch(input: LogSearchInput, gitBin: string, cwd: string):
   return okEnvelope(result);
 }
 
+interface ShowInput {
+  commit: string;
+  with_diff?: boolean;
+}
+
+interface ShowResult extends ShowMetadata {
+  files: ShowFile[];
+  diff?: string;
+  truncated?: boolean;
+  truncation_reason?: "max_diff_bytes";
+}
+
+function truncateDiff(diff: string): { diff: string; truncated: boolean } {
+  const buf = Buffer.from(diff, "utf8");
+  if (buf.byteLength <= MAX_DIFF_BYTES) return { diff, truncated: false };
+  // Slice on a safe byte boundary; trailing partial UTF-8 codepoints become U+FFFD.
+  const sliced = buf.subarray(0, MAX_DIFF_BYTES).toString("utf8");
+  return { diff: sliced + "\n…[truncated]", truncated: true };
+}
+
+async function runShow(input: ShowInput, gitBin: string, cwd: string): Promise<ToolResult> {
+  if (typeof input.commit !== "string" || input.commit.length === 0) {
+    return errorEnvelope("invalid_input", { field: "commit", detail: "required" });
+  }
+  // Pass 1: metadata.
+  const metaArgs = [
+    "show",
+    "--no-patch",
+    "--format=%H%x00%P%x00%an%x00%aI%x00%B",
+    input.commit,
+  ];
+  const metaRes = runGit(gitBin, metaArgs, cwd);
+  if (metaRes.timedOut) return errorEnvelope("git_timeout", { duration_ms: metaRes.duration_ms });
+  if (metaRes.code !== 0) {
+    const stderr = metaRes.stderr.toLowerCase();
+    if (stderr.includes("unknown revision") || stderr.includes("bad revision") || stderr.includes("ambiguous argument")) {
+      return errorEnvelope("invalid_ref", { ref: input.commit, detail: metaRes.stderr.slice(0, 500) });
+    }
+    return errorEnvelope("git_command_failed", { detail: metaRes.stderr.slice(0, 500) });
+  }
+  const meta = parseShowMetadata(metaRes.stdout);
+  if (!meta) {
+    return errorEnvelope("git_command_failed", { detail: "show metadata parse failed" });
+  }
+
+  // Pass 2: file list. `git show` accepts only one of --name-status / --numstat
+  // at a time — passing both keeps only the first. Run them separately and
+  // feed the concatenated output through parseShowFiles. --format= suppresses
+  // the commit header.
+  const nameStatusRes = runGit(gitBin, ["show", "--name-status", "--format=", input.commit], cwd);
+  if (nameStatusRes.timedOut) return errorEnvelope("git_timeout", { duration_ms: nameStatusRes.duration_ms });
+  if (nameStatusRes.code !== 0) {
+    return errorEnvelope("git_command_failed", { detail: nameStatusRes.stderr.slice(0, 500) });
+  }
+  const numstatRes = runGit(gitBin, ["show", "--numstat", "--format=", input.commit], cwd);
+  if (numstatRes.timedOut) return errorEnvelope("git_timeout", { duration_ms: numstatRes.duration_ms });
+  if (numstatRes.code !== 0) {
+    return errorEnvelope("git_command_failed", { detail: numstatRes.stderr.slice(0, 500) });
+  }
+  const files = parseShowFiles(nameStatusRes.stdout + "\n" + numstatRes.stdout);
+
+  const result: ShowResult = { ...meta, files };
+
+  // Pass 3: optional diff.
+  if (input.with_diff) {
+    const diffRes = runGit(gitBin, ["show", "--format=", "--patch", input.commit], cwd);
+    if (diffRes.timedOut) return errorEnvelope("git_timeout", { duration_ms: diffRes.duration_ms });
+    if (diffRes.code !== 0) {
+      return errorEnvelope("git_command_failed", { detail: diffRes.stderr.slice(0, 500) });
+    }
+    const { diff, truncated } = truncateDiff(diffRes.stdout);
+    result.diff = diff;
+    if (truncated) {
+      result.truncated = true;
+      result.truncation_reason = "max_diff_bytes";
+    }
+  }
+  return okEnvelope(result);
+}
+
 /** Exposed for testing only. Do NOT import from outside this package. */
-export const _internal = { runGit, parseLines, parseBlamePorcelain, parseLogOutput };
+export const _internal = { runGit, parseLines, parseBlamePorcelain, parseLogOutput, parseShowMetadata, parseShowFiles };

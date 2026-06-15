@@ -444,3 +444,135 @@ describe("git_log_search — end-to-end", () => {
     }
   });
 });
+
+describe("parseShowMetadata", () => {
+  it("parses NUL-delimited metadata into structured fields", () => {
+    const input = [
+      "abc1234567890abcdef1234567890abcdef123456",
+      "parent111111111111111111111111111111111111",
+      "Alice",
+      "2026-01-01T12:00:00Z",
+      "feat: add x\n\nlonger body line 1\nlonger body line 2",
+    ].join("\0");
+    const out = _internal.parseShowMetadata(input);
+    expect(out).toMatchObject({
+      commit: "abc1234567890abcdef1234567890abcdef123456",
+      parents: ["parent111111111111111111111111111111111111"],
+      author: "Alice",
+      date: "2026-01-01T12:00:00Z",
+      message: "feat: add x\n\nlonger body line 1\nlonger body line 2",
+    });
+  });
+
+  it("parses multiple parents (merge commit)", () => {
+    const input = [
+      "abc1234567890abcdef1234567890abcdef123456",
+      "parent111111111111111111111111111111111111 parent222222222222222222222222222222222222",
+      "Alice",
+      "2026-01-01T12:00:00Z",
+      "Merge branch x",
+    ].join("\0");
+    const out = _internal.parseShowMetadata(input);
+    expect(out!.parents).toHaveLength(2);
+  });
+
+  it("returns null on malformed input", () => {
+    expect(_internal.parseShowMetadata("only-one-field")).toBeNull();
+  });
+});
+
+describe("parseShowFiles", () => {
+  it("combines --name-status and --numstat output", () => {
+    const input = "M\tfile1.ts\nA\tfile2.ts\n10\t5\tfile1.ts\n3\t0\tfile2.ts\n";
+    const out = _internal.parseShowFiles(input);
+    expect(out).toEqual([
+      { path: "file1.ts", status: "M", additions: 10, deletions: 5 },
+      { path: "file2.ts", status: "A", additions: 3, deletions: 0 },
+    ]);
+  });
+
+  it("handles renames (R<percent>\\told\\tnew)", () => {
+    const input = "R100\told.ts\tnew.ts\n0\t0\tnew.ts\n";
+    const out = _internal.parseShowFiles(input);
+    expect(out).toEqual([
+      { path: "new.ts", status: "R", additions: 0, deletions: 0 },
+    ]);
+  });
+
+  it("handles binary files (numstat = -\\t-)", () => {
+    const input = "M\tfoo.bin\n-\t-\tfoo.bin\n";
+    const out = _internal.parseShowFiles(input);
+    expect(out).toEqual([
+      { path: "foo.bin", status: "M", additions: 0, deletions: 0 },
+    ]);
+  });
+});
+
+describe("git_show — end-to-end", () => {
+  it("returns metadata + file list for HEAD", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_show({ commit: "HEAD" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.commit).toMatch(/^[0-9a-f]{40}$/);
+      expect(data.author).toBe("Test User");
+      expect(data.message).toContain("introduce b.ts");
+      expect(data.files).toHaveLength(1);
+      expect(data.files[0]).toMatchObject({
+        path: "b.ts",
+        status: "A",
+        additions: 1,
+      });
+      expect(data.diff).toBeUndefined();
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("includes a truncated patch when with_diff is true", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_show({ commit: "HEAD", with_diff: true });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(typeof data.diff).toBe("string");
+      expect(data.diff).toContain("const z = 3");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("returns invalid_ref for a bogus commit", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_show({ commit: "nonexistent-sha-xxxxxxxxxxxx" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBe(true);
+      expect(data.error).toBe("invalid_ref");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("returns invalid_input when commit is empty", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await gitHandlers.git_show({ commit: "" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBe(true);
+      expect(data.error).toBe("invalid_input");
+      expect(data.field).toBe("commit");
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+});
