@@ -89,7 +89,7 @@ export type TelemetryRecord =
       tool: "git_blame" | "git_log_search" | "git_show";
       duration_ms: number;
       truncated: boolean;
-      outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "not_a_git_repository" | "error";
+      outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "error";
     };
 
 function telemetryDir(): string {

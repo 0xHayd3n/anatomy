@@ -506,6 +506,19 @@ describe("parseShowFiles", () => {
       { path: "foo.bin", status: "M", additions: 0, deletions: 0 },
     ]);
   });
+
+  it("handles renames where numstat-side path differs (brace notation)", () => {
+    // git show --numstat may emit renames as "<adds>\t<dels>\t{old => new}".
+    // The name-status side reports the new path; if numstat's path doesn't
+    // match exactly, stats default to 0/0 (graceful degradation rather than
+    // mis-attribution). Documents the current behavior and guards against
+    // a regression that would crash on the brace form.
+    const input = "R100\told.ts\tnew.ts\n5\t3\t{old.ts => new.ts}\n";
+    const out = _internal.parseShowFiles(input);
+    expect(out).toEqual([
+      { path: "new.ts", status: "R", additions: 0, deletions: 0 },
+    ]);
+  });
 });
 
 describe("git_show — end-to-end", () => {

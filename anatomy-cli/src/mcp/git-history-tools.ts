@@ -8,6 +8,11 @@ import { spawnSync } from "node:child_process";
 
 const DEFAULT_TIMEOUT_MS = 5000;
 
+/** Force English git output so the substring-based stderr classification
+ *  (file_not_found / invalid_ref) still works on non-English locales.
+ *  LC_ALL trumps LANG and LC_MESSAGES; setting both is defensive. */
+const C_LOCALE_ENV: NodeJS.ProcessEnv = { LC_ALL: "C", LANG: "C" };
+
 /** Resolve the path to the git binary. Checks ANATOMY_GIT_BIN first, then
  *  PATH via `where`/`command -v`. Returns null on failure. Respects
  *  ANATOMY_GIT_DISABLE=1 (forces null — test hook for the no-git case). */
@@ -42,6 +47,7 @@ export function probeRepo(gitBin: string, cwd: string): boolean {
     stdio: ["ignore", "pipe", "pipe"],
     encoding: "utf8",
     timeout: DEFAULT_TIMEOUT_MS,
+    env: { ...process.env, ...C_LOCALE_ENV },
   });
   return r.status === 0 && r.stdout.trim() === "true";
 }
@@ -66,13 +72,14 @@ function runGit(gitBin: string, args: string[], cwd: string): GitResult {
     encoding: "utf8",
     timeout: timeoutMs,
     maxBuffer: 16 * 1024 * 1024, // 16 MB; git log on big repos can be large
+    env: { ...process.env, ...C_LOCALE_ENV },
   });
   const duration_ms = Date.now() - t0;
-  // spawnSync sets `error` when the child was killed by timeout. On POSIX
-  // `signal` is "SIGTERM"; on Windows error.code === "ETIMEDOUT".
-  const timedOut = r.error !== undefined
-    ? (r.error as NodeJS.ErrnoException).code === "ETIMEDOUT" || r.signal === "SIGTERM"
-    : false;
+  // r.status === null is the Node-guaranteed signal that the child was killed
+  // before it could exit normally. Covers both POSIX timeout (SIGTERM) and
+  // Windows timeout (error.code === "ETIMEDOUT"). External signal-kill would
+  // also classify as timeout here — acceptable; both mean "call didn't finish".
+  const timedOut = r.status === null;
   return {
     code: r.status ?? 1,
     stdout: r.stdout ?? "",
@@ -201,13 +208,6 @@ export const gitHistoryToolHandlers: Record<string, ToolHandler> = {
   },
 };
 
-async function placeholder(name: string): Promise<ToolResult> {
-  return {
-    content: [{ type: "text", text: JSON.stringify({ error: "not_implemented", tool: name }) }],
-    isError: true,
-  };
-}
-
 const MAX_BLAME_LINES = Number(process.env.ANATOMY_GIT_MAX_BLAME_LINES ?? "500") || 500;
 const MAX_CONTENT_LEN = 500;
 
@@ -220,14 +220,17 @@ interface BlameRecord {
   content: string;
 }
 
-/** Parse "10-25" or "42". Returns null for malformed input or end < start or start < 1. */
+const MAX_LINE_NUMBER = 10_000_000;
+
+/** Parse "10-25" or "42". Returns null for malformed input, end < start,
+ *  start < 1, or either bound exceeding MAX_LINE_NUMBER. */
 function parseLines(spec: string): { start: number; end: number } | null {
   if (!spec) return null;
   const m = spec.match(/^(\d+)(?:-(\d+))?$/);
   if (!m) return null;
   const start = Number(m[1]);
   const end = m[2] !== undefined ? Number(m[2]) : start;
-  if (start < 1 || end < start) return null;
+  if (start < 1 || end < start || end > MAX_LINE_NUMBER) return null;
   return { start, end };
 }
 
@@ -417,13 +420,20 @@ interface ShowMetadata {
 }
 
 /** Parse NUL-delimited %H\0%P\0%an\0%aI\0%B output from `git show --no-patch`.
- *  Returns null if fewer than 5 NUL fields are present. */
+ *  Returns null if fewer than 5 NUL fields are present.
+ *
+ *  Trim strategy: git always appends exactly one trailing newline to its
+ *  output stream after the last format field. Trimming `[\r\n]+$` on the
+ *  whole input would also strip legitimate trailing blank lines inside the
+ *  commit message body. Instead, trim only one trailing newline from the
+ *  *message* field — preserving deliberate trailing whitespace in messages
+ *  that end with a blank line. */
 function parseShowMetadata(input: string): ShowMetadata | null {
-  const trimmed = input.replace(/[\r\n]+$/, "");
-  const parts = trimmed.split("\0");
+  const parts = input.split("\0");
   if (parts.length < 5) return null;
   const [commit, parentsStr, author, date, ...messageParts] = parts;
-  const message = messageParts.join("\0");
+  const rawMessage = messageParts.join("\0");
+  const message = rawMessage.replace(/\r?\n$/, "");
   const parents = parentsStr.trim().length > 0 ? parentsStr.trim().split(/\s+/) : [];
   return { commit, parents, author, date, message };
 }

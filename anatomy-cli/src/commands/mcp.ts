@@ -237,14 +237,13 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
         const text = result.content[0]?.text ?? "{}";
         let parsed: { truncated?: boolean; error?: string };
         try { parsed = JSON.parse(text); } catch { parsed = {}; }
-        const outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "not_a_git_repository" | "error" =
+        const outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "error" =
           !result.isError ? "ok"
           : parsed.error === "file_not_found" ? "file_not_found"
           : parsed.error === "invalid_ref" ? "invalid_ref"
           : parsed.error === "invalid_input" ? "invalid_input"
           : parsed.error === "git_command_failed" ? "git_command_failed"
           : parsed.error === "git_timeout" ? "git_timeout"
-          : parsed.error === "not_a_git_repository" ? "not_a_git_repository"
           : "error";
         recordTelemetry({
           kind: "git_history_call",
