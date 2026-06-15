@@ -171,6 +171,7 @@ anatomy validate          # validate .anatomy (and a sibling .anatomy-memory if 
 anatomy mcp               # serve it to agents over MCP  (or: anatomy hook)
 anatomy mcp --with-fff    # additionally proxy fff's fast file-search tools (see below)
 anatomy mcp --with-ast-grep   # additionally expose ast_grep_search (structural code search)
+anatomy mcp --with-git-history   # additionally expose git_blame / git_log_search / git_show
 ```
 
 A generated `.anatomy` is TOML you are expected to **hand-edit** — Pass 1
@@ -261,6 +262,46 @@ cannot.
 optionalDep can fail on exotic platforms), `anatomy mcp --with-ast-grep`
 hard-fails at startup with an actionable error. There's no subprocess
 crash recovery to worry about — the tool either loaded or it didn't.
+
+### Pairing with git history for the time axis
+
+`anatomy mcp --with-git-history` adds three read-only git query tools —
+`git_blame`, `git_log_search`, `git_show` — to anatomy's MCP namespace.
+Pure shellout to the local `git` binary via `spawnSync`; no subprocess
+lifecycle, no in-process library, no install footprint beyond git itself.
+
+```bash
+anatomy mcp --with-git-history
+# composes with --with-fff and --with-ast-grep:
+anatomy mcp --with-fff --with-ast-grep --with-git-history
+```
+
+| Env | Purpose | Default |
+|---|---|---|
+| `ANATOMY_GIT_BIN` | Override the path to the git binary. | resolve via `PATH` |
+| `ANATOMY_GIT_MAX_BLAME_LINES` | Cap on `git_blame` output. | `500` |
+| `ANATOMY_GIT_MAX_LOG_COMMITS` | Cap on `git_log_search` results. | `100` |
+| `ANATOMY_GIT_MAX_DIFF_BYTES` | Cap on `git_show` patch body. | `4096` |
+| `ANATOMY_GIT_TIMEOUT_MS` | Per-call timeout. | `5000` |
+
+The fourth axis: anatomy tells the agent *what should I know?*, fff
+tells it *where is X textually?*, ast-grep tells it *where is X
+structurally?*, and git-history tells it *when did X change and why?*.
+Combined, the agent can answer cross-cutting queries — *"who introduced
+this pattern, in which commit, and what did the surrounding code look
+like then?"* — from one MCP endpoint.
+
+**Strictly read-only.** No commit, checkout, reset, push, pull, fetch,
+branch -d, or any other mutating git operation. The tool surface accepts
+narrowly-typed inputs (file path, commit ref, query string) — there is
+no opaque `command` parameter and never will be.
+
+**Failure semantics.** Hard-fails at startup if git isn't on PATH or the
+cwd isn't inside a git work-tree. No degraded mode — unlike fff with
+mid-session crash recovery, git is invoked fresh per call. Per-call
+timeouts (`ANATOMY_GIT_TIMEOUT_MS`, default 5000) cap long-running ops.
+Telemetry events (`git_history_call`) land in
+`~/.anatomy/telemetry.jsonl` alongside the existing streams.
 
 ## Format
 
