@@ -149,3 +149,83 @@ describe("walkFiles", () => {
     expect(found).toHaveLength(3);
   });
 });
+
+import { astGrepToolHandlers as handlers } from "../src/mcp/ast-grep-tools.js";
+
+describe("ast_grep_search — end-to-end", () => {
+  function setupTsRepo(): string {
+    const dir = mkdtempSync(join(tmpdir(), "astgrep-e2e-"));
+    writeFileSync(
+      join(dir, "a.ts"),
+      "console.log('first');\nconsole.log('second');\nconsole.error('third');\n",
+    );
+    writeFileSync(join(dir, "b.ts"), "function f() { return 42; }\n");
+    return dir;
+  }
+
+  it("finds matches with captures and returns the inferred language", async () => {
+    const dir = setupTsRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await handlers.ast_grep_search({
+        pattern: "console.log($X)",
+        file_path: "*.ts",
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.language).toBe("ts");
+      expect(data.matches).toHaveLength(2);
+      expect(data.matches[0]).toMatchObject({
+        file: expect.stringMatching(/a\.ts$/),
+        line: expect.any(Number),
+        column: expect.any(Number),
+        text: expect.stringContaining("console.log"),
+      });
+      expect(data.matches[0].captures).toMatchObject({ X: "'first'" });
+      expect(data.files_scanned).toBe(2);
+      expect(data.truncated).toBe(false);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("returns empty matches and no error when nothing matches", async () => {
+    const dir = setupTsRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await handlers.ast_grep_search({
+        pattern: "unrelated_function_call_that_doesnt_exist($X)",
+        file_path: "*.ts",
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.matches).toEqual([]);
+      expect(data.files_scanned).toBeGreaterThan(0);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("respects max_results and sets truncated", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "astgrep-trunc-"));
+    let body = "";
+    for (let i = 0; i < 10; i++) body += `console.log(${i});\n`;
+    writeFileSync(join(dir, "many.ts"), body);
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      const r = await handlers.ast_grep_search({
+        pattern: "console.log($X)",
+        file_path: "*.ts",
+        max_results: 3,
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(data.matches).toHaveLength(3);
+      expect(data.truncated).toBe(true);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+});
