@@ -170,6 +170,7 @@ anatomy generate --ai     # Pass 2: enrich the human-knowledge fields via an AI 
 anatomy validate          # validate .anatomy (and a sibling .anatomy-memory if present)
 anatomy mcp               # serve it to agents over MCP  (or: anatomy hook)
 anatomy mcp --with-fff    # additionally proxy fff's fast file-search tools (see below)
+anatomy mcp --with-ast-grep   # additionally expose ast_grep_search (structural code search)
 ```
 
 A generated `.anatomy` is TOML you are expected to **hand-edit** — Pass 1
@@ -223,6 +224,43 @@ session while anatomy's own tools keep serving. Per-call timeouts are
 configurable via `ANATOMY_FFF_TIMEOUT_MS`. Telemetry events
 (`fff_bridge_lifecycle`, `fff_call`) land in `~/.anatomy/telemetry.jsonl`
 alongside the existing `mcp_call` stream.
+
+### Pairing with ast-grep for structural code search
+
+`anatomy mcp --with-ast-grep` adds a single read-only `ast_grep_search` tool
+to anatomy's MCP namespace, backed by the `@ast-grep/napi` optional
+dependency (already declared in `anatomy-cli`'s `package.json`). Unlike
+`--with-fff`, there is **no subprocess and no bridge** — the napi module
+loads in the same Node process as anatomy's MCP server. The tool answers
+the verb that fff and ripgrep cannot: *find by AST shape*, not text.
+
+```bash
+anatomy mcp --with-ast-grep
+# composes with --with-fff:
+anatomy mcp --with-fff --with-ast-grep
+```
+
+| Env | Purpose | Default |
+|---|---|---|
+| `ANATOMY_AST_GREP_MAX_FILES` | Cap on files the walk reads per call. | `5000` |
+
+The default-exclude list (`node_modules`, `dist`, `build`, `target`,
+`.git`, and similar non-source dirs) is hardcoded — without it the tool
+would be unusable on any real repo. Pass an explicit `file_path` glob to
+scope a search further. Without `--with-ast-grep`, the behaviour of
+`anatomy mcp` is byte-identical to v1.1.0 — no napi probe runs.
+
+**Why pair it?** anatomy answers *"what should I know about this repo?"*
+(curated rules, decisions, lived memory). fff answers *"where is X
+textually?"*. ast-grep answers *"where is X **structurally**?"* — the
+agent can search for *"every `CallExpression` whose callee is `spawnSync`
+and whose options object lacks `shell: true`"*, a query the other two
+cannot.
+
+**Failure semantics.** If `@ast-grep/napi` failed to install (the
+optionalDep can fail on exotic platforms), `anatomy mcp --with-ast-grep`
+hard-fails at startup with an actionable error. There's no subprocess
+crash recovery to worry about — the tool either loaded or it didn't.
 
 ## Format
 
