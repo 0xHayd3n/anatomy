@@ -100,7 +100,8 @@ Commands:
                                             Append a memory entry. Read content from stdin if "-" passed,
                                             or open $EDITOR when content arg is omitted.
                                             Kinds: gotcha | decision | convention | attempt | milestone
-  mcp [--with-fff] [--with-ast-grep]        Start an MCP stdio server exposing anatomy's tools.
+  mcp [--with-fff] [--with-ast-grep] [--with-git-history]
+                                            Start an MCP stdio server exposing anatomy's tools.
                                             --with-fff: also proxy fff's tools (ffgrep, fffind) via
                                             a child fff-mcp subprocess. Hard-fails if no fff
                                             binary is on PATH. ANATOMY_FFF_BIN overrides the binary
@@ -114,6 +115,13 @@ Commands:
                                             Hard-fails if the optional dep failed to install.
                                             ANATOMY_AST_GREP_MAX_FILES (default 5000) caps the
                                             file walk per call.
+                                            --with-git-history: also expose git_blame, git_log_search,
+                                            git_show — read-only git queries via spawnSync to the
+                                            local git binary. Hard-fails if git is not on PATH or
+                                            cwd is not in a git work-tree. ANATOMY_GIT_BIN overrides
+                                            the binary; ANATOMY_GIT_MAX_BLAME_LINES (500) /
+                                            _MAX_LOG_COMMITS (100) / _MAX_DIFF_BYTES (4096) /
+                                            _TIMEOUT_MS (5000) cap per-call output.
   memory list [--kind <k>] [--topic <s>]
               [--ref <s>] [--tag <t>]
               [--include-superseded]
@@ -197,6 +205,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (a === "--no-pass2-retry") { flags.noPass2Retry = true; i++; continue; }
     if (a === "--with-fff") { flags.withFff = true; i++; continue; }
     if (a === "--with-ast-grep") { flags.withAstGrep = true; i++; continue; }
+    if (a === "--with-git-history") { flags.withGitHistory = true; i++; continue; }
     if (a === "--refresh-registry") { flags.refreshRegistry = true; i++; continue; }
     if (a === "--rich") { flags.rich = true; i++; continue; }
     if (a === "--no-pass1") { flags.noPass1 = true; i++; continue; }
@@ -358,6 +367,7 @@ async function main(): Promise<number> {
       return mcpCommand({
         withFff: !!flags.withFff,
         withAstGrep: !!flags.withAstGrep,
+        withGitHistory: !!flags.withGitHistory,
       });
     case "telemetry":
       return telemetryCommand(positional, {});

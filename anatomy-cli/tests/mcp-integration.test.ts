@@ -226,3 +226,58 @@ async function spawnAstGrep(repoDir: string, requests: JsonRpcRequest[]): Promis
     for (const req of requests) proc.stdin.write(JSON.stringify(req) + "\n");
   });
 }
+
+describe("anatomy mcp --with-git-history", () => {
+  it("hard-fails with actionable error when git is unavailable", () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-git-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    let stderr = "";
+    let exitCode = 0;
+    try {
+      execSync(`node "${BIN}" mcp --with-git-history`, {
+        cwd: repoDir,
+        env: {
+          ...process.env,
+          ANATOMY_GIT_DISABLE: "1",
+          ANATOMY_TELEMETRY_DISABLE: "1",
+        },
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
+      });
+    } catch (e) {
+      const err = e as { status?: number; stderr?: Buffer };
+      exitCode = err.status ?? 0;
+      stderr = err.stderr?.toString() ?? "";
+    }
+    expect(exitCode).toBe(1);
+    expect(stderr).toMatch(/git not found/i);
+  });
+
+  it("hard-fails with actionable error when cwd is not a git repo", () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-nogit-"));
+    // No `git init` here — deliberately not a repo.
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    let stderr = "";
+    let exitCode = 0;
+    try {
+      execSync(`node "${BIN}" mcp --with-git-history`, {
+        cwd: repoDir,
+        env: {
+          ...process.env,
+          ANATOMY_TELEMETRY_DISABLE: "1",
+        },
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
+      });
+    } catch (e) {
+      const err = e as { status?: number; stderr?: Buffer };
+      exitCode = err.status ?? 0;
+      stderr = err.stderr?.toString() ?? "";
+    }
+    expect(exitCode).toBe(1);
+    expect(stderr).toMatch(/not in a git repository/i);
+  });
+});

@@ -24,6 +24,7 @@ function isMcpDisabledByEnv(): boolean {
 export interface McpCommandOptions {
   withFff?: boolean;
   withAstGrep?: boolean;
+  withGitHistory?: boolean;
 }
 
 export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> {
@@ -159,6 +160,40 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
     Object.assign(anatomyHandlers, astGrepToolHandlers);
   }
 
+  if (opts.withGitHistory) {
+    const { resolveGitBin, probeRepo } = await import("../mcp/git-history-tools.js");
+    const gitBin = resolveGitBin();
+    if (!gitBin) {
+      process.stderr.write(
+        "error: git not found on PATH; install git or omit --with-git-history\n",
+      );
+      return 1;
+    }
+    if (!probeRepo(gitBin, process.cwd())) {
+      process.stderr.write(
+        "error: not in a git repository; cd into a git repo or omit --with-git-history\n",
+      );
+      return 1;
+    }
+    if (!recordTelemetry) {
+      ({ recordTelemetry } = await import("../telemetry.js"));
+    }
+    const { gitHistoryToolDefinitions, gitHistoryToolHandlers } = await import("../mcp/git-history-tools.js");
+    // Collision check against the names already in the dispatch map.
+    for (const def of gitHistoryToolDefinitions) {
+      if (def.name in anatomyHandlers) {
+        process.stderr.write(`error: git-history tool name collision: ${def.name}\n`);
+        return 1;
+      }
+      if (fffDefs.some((d) => d.name === def.name)) {
+        process.stderr.write(`error: git-history tool name collision with fff bridge: ${def.name}\n`);
+        return 1;
+      }
+    }
+    anatomyDefs.push(...gitHistoryToolDefinitions);
+    Object.assign(anatomyHandlers, gitHistoryToolHandlers);
+  }
+
   const allDefs = [...anatomyDefs, ...fffDefs];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: allDefs }));
@@ -192,6 +227,31 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
           matches: Array.isArray(parsed.matches) ? parsed.matches.length : 0,
           truncated: !!parsed.truncated,
           duration_ms: Date.now() - t0,
+          outcome,
+        });
+        return result;
+      }
+      if (opts.withGitHistory && (name === "git_blame" || name === "git_log_search" || name === "git_show") && recordTelemetry) {
+        const t0 = Date.now();
+        const result = await handler(args ?? {}) as { content: Array<{ text: string }>; isError?: boolean };
+        const text = result.content[0]?.text ?? "{}";
+        let parsed: { truncated?: boolean; error?: string };
+        try { parsed = JSON.parse(text); } catch { parsed = {}; }
+        const outcome: "ok" | "file_not_found" | "invalid_ref" | "invalid_input" | "git_command_failed" | "git_timeout" | "not_a_git_repository" | "error" =
+          !result.isError ? "ok"
+          : parsed.error === "file_not_found" ? "file_not_found"
+          : parsed.error === "invalid_ref" ? "invalid_ref"
+          : parsed.error === "invalid_input" ? "invalid_input"
+          : parsed.error === "git_command_failed" ? "git_command_failed"
+          : parsed.error === "git_timeout" ? "git_timeout"
+          : parsed.error === "not_a_git_repository" ? "not_a_git_repository"
+          : "error";
+        recordTelemetry({
+          kind: "git_history_call",
+          ts: new Date().toISOString(),
+          tool: name as "git_blame" | "git_log_search" | "git_show",
+          duration_ms: Date.now() - t0,
+          truncated: !!parsed.truncated,
           outcome,
         });
         return result;
