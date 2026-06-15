@@ -576,3 +576,35 @@ describe("git_show — end-to-end", () => {
     }
   });
 });
+
+describe("git-history-tools — error paths", () => {
+  it("returns git_unavailable when ANATOMY_GIT_DISABLE=1", async () => {
+    const oldEnv = process.env.ANATOMY_GIT_DISABLE;
+    try {
+      process.env.ANATOMY_GIT_DISABLE = "1";
+      const r = await gitHandlers.git_blame({ file_path: "a.ts" });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBe(true);
+      expect(data.error).toBe("git_unavailable");
+    } finally {
+      if (oldEnv === undefined) delete process.env.ANATOMY_GIT_DISABLE;
+      else process.env.ANATOMY_GIT_DISABLE = oldEnv;
+    }
+  });
+
+  it("returns invalid_input for git_log_search with unknown kind", async () => {
+    const r = await gitHandlers.git_log_search({ kind: "bogus" });
+    const data = JSON.parse(r.content[0].text);
+    expect(r.isError).toBe(true);
+    expect(data.error).toBe("invalid_input");
+    expect(data.field).toBe("kind");
+  });
+
+  it("file_path missing → invalid_input for git_blame", async () => {
+    const r = await gitHandlers.git_blame({});
+    const data = JSON.parse(r.content[0].text);
+    expect(r.isError).toBe(true);
+    expect(data.error).toBe("invalid_input");
+    expect(data.field).toBe("file_path");
+  });
+});
