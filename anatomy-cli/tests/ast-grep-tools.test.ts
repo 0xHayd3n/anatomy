@@ -86,3 +86,66 @@ describe("defaultExtensionsFor", () => {
     expect(_internal.defaultExtensionsFor("erlang")).toBeNull();
   });
 });
+
+import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, sep as PATH_SEP } from "node:path";
+
+const toNative = (p: string): string => p.replace(/\//g, PATH_SEP);
+
+describe("walkFiles", () => {
+  function setupRepo(): string {
+    const dir = mkdtempSync(join(tmpdir(), "astgrep-walk-"));
+    writeFileSync(join(dir, "a.ts"), "// a");
+    writeFileSync(join(dir, "b.ts"), "// b");
+    writeFileSync(join(dir, "c.py"), "# c");
+    mkdirSync(join(dir, "src"));
+    writeFileSync(join(dir, "src", "d.ts"), "// d");
+    // Default-excluded directories — must NOT appear in the walk.
+    mkdirSync(join(dir, "node_modules"));
+    writeFileSync(join(dir, "node_modules", "should-skip.ts"), "// skip");
+    mkdirSync(join(dir, "dist"));
+    writeFileSync(join(dir, "dist", "also-skip.ts"), "// skip");
+    return dir;
+  }
+
+  it("walks default extensions for a lang when no glob is given", async () => {
+    const dir = setupRepo();
+    const found: string[] = [];
+    for await (const f of _internal.walkFiles({ cwd: dir, lang: "ts", maxFiles: 100 })) {
+      found.push(f);
+    }
+    // Should include a.ts, b.ts, src/d.ts. NOT node_modules/should-skip.ts or dist/also-skip.ts.
+    expect(found.sort()).toEqual(["a.ts", "b.ts", "src/d.ts"].map(toNative));
+  });
+
+  it("walks an explicit glob when provided", async () => {
+    const dir = setupRepo();
+    const found: string[] = [];
+    for await (const f of _internal.walkFiles({ cwd: dir, lang: "ts", globPattern: "src/**/*.ts", maxFiles: 100 })) {
+      found.push(f);
+    }
+    expect(found).toEqual([toNative("src/d.ts")]);
+  });
+
+  it("respects the default-exclude list even when an explicit glob would match", async () => {
+    const dir = setupRepo();
+    const found: string[] = [];
+    for await (const f of _internal.walkFiles({ cwd: dir, lang: "ts", globPattern: "**/*.ts", maxFiles: 100 })) {
+      found.push(f);
+    }
+    // Should not include anything under node_modules or dist.
+    expect(found.find((f) => f.includes("node_modules"))).toBeUndefined();
+    expect(found.find((f) => f.includes("dist"))).toBeUndefined();
+  });
+
+  it("caps the walk at maxFiles", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "astgrep-cap-"));
+    for (let i = 0; i < 10; i++) writeFileSync(join(dir, `f${i}.ts`), "// x");
+    const found: string[] = [];
+    for await (const f of _internal.walkFiles({ cwd: dir, lang: "ts", maxFiles: 3 })) {
+      found.push(f);
+    }
+    expect(found).toHaveLength(3);
+  });
+});

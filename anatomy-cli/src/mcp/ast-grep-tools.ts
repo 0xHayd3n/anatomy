@@ -2,6 +2,8 @@
 // In-process MCP tool: ast_grep_search. Loaded when `anatomy mcp` is invoked
 // with --with-ast-grep. See docs/superpowers/specs/2026-06-15-anatomy-mcp-with-ast-grep-design.md.
 
+import { glob } from "node:fs/promises";
+
 export interface ToolDefinition {
   name: string;
   description: string;
@@ -68,8 +70,70 @@ function defaultExtensionsFor(lang: string): readonly string[] | null {
   return LANG_TO_EXTS.get(lang) ?? null;
 }
 
+const DEFAULT_EXCLUDES: readonly string[] = [
+  "node_modules",
+  "dist",
+  "build",
+  "out",
+  "target",
+  ".git",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".turbo",
+  ".cache",
+  "coverage",
+  "vendor",
+  "__pycache__",
+  ".venv",
+  "venv",
+  "env",
+  ".tox",
+  ".pytest_cache",
+];
+
+const PATH_SEP_RE = /[\\/]/;
+
+/** Returns true if any path segment is in DEFAULT_EXCLUDES. */
+function isExcluded(relPath: string): boolean {
+  for (const segment of relPath.split(PATH_SEP_RE)) {
+    if (DEFAULT_EXCLUDES.includes(segment)) return true;
+  }
+  return false;
+}
+
+interface WalkOptions {
+  cwd: string;
+  lang: string;
+  globPattern?: string;
+  maxFiles: number;
+}
+
+/** Yields repo-relative file paths matching the glob (or the lang's default
+ *  extensions if no glob is given), skipping any path under DEFAULT_EXCLUDES.
+ *  Stops after `maxFiles`. Files are yielded in the order Node's fs.glob
+ *  produces them — no extra sorting. */
+async function* walkFiles(opts: WalkOptions): AsyncIterable<string> {
+  let pattern = opts.globPattern;
+  if (!pattern) {
+    const exts = defaultExtensionsFor(opts.lang);
+    if (!exts || exts.length === 0) return; // unknown lang → empty walk
+    // Build a brace expansion of extensions: **/*.{ts,tsx} etc.
+    const stripped = exts.map((e) => e.startsWith(".") ? e.slice(1) : e);
+    pattern = `**/*.${stripped.length === 1 ? stripped[0] : "{" + stripped.join(",") + "}"}`;
+  }
+  let count = 0;
+  for await (const entry of glob(pattern, { cwd: opts.cwd })) {
+    const rel = entry as string;
+    if (isExcluded(rel)) continue;
+    yield rel;
+    count++;
+    if (count >= opts.maxFiles) return;
+  }
+}
+
 /** Exposed for testing only. Do NOT import from outside this package. */
-export const _internal = { inferLang, defaultExtensionsFor, LANG_TABLE };
+export const _internal = { inferLang, defaultExtensionsFor, LANG_TABLE, walkFiles };
 
 export const astGrepToolDefinitions: ToolDefinition[] = [
   {
