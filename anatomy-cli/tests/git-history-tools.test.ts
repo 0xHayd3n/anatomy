@@ -443,6 +443,72 @@ describe("git_log_search — end-to-end", () => {
       process.chdir(oldCwd);
     }
   });
+
+  it("respects the `since` filter (future date excludes everything)", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      // Far-future since date — must exclude every commit in the fixture.
+      const r = await gitHandlers.git_log_search({
+        kind: "message",
+        query: ".",
+        since: "2099-01-01",
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.commits).toEqual([]);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("respects the `until` filter (past date excludes everything)", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      // Far-past until date — must exclude every commit in the fixture.
+      const r = await gitHandlers.git_log_search({
+        kind: "message",
+        query: ".",
+        until: "1990-01-01",
+      });
+      const data = JSON.parse(r.content[0].text);
+      expect(r.isError).toBeFalsy();
+      expect(data.commits).toEqual([]);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
+
+  it("respects the `author` filter (matching substring + non-matching)", async () => {
+    const dir = setupLogRepo();
+    const oldCwd = process.cwd();
+    try {
+      process.chdir(dir);
+      // Fixture commits are all by "Test User" / "test@example.com".
+      const r1 = await gitHandlers.git_log_search({
+        kind: "message",
+        query: ".",
+        author: "Test User",
+      });
+      const data1 = JSON.parse(r1.content[0].text);
+      expect(r1.isError).toBeFalsy();
+      expect(data1.commits.length).toBeGreaterThan(0);
+
+      const r2 = await gitHandlers.git_log_search({
+        kind: "message",
+        query: ".",
+        author: "Nonexistent Author",
+      });
+      const data2 = JSON.parse(r2.content[0].text);
+      expect(r2.isError).toBeFalsy();
+      expect(data2.commits).toEqual([]);
+    } finally {
+      process.chdir(oldCwd);
+    }
+  });
 });
 
 describe("parseShowMetadata", () => {
