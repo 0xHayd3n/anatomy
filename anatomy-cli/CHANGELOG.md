@@ -2,6 +2,56 @@
 
 See the cross-package [root CHANGELOG](../CHANGELOG.md) for ecosystem-level events.
 
+## [1.2.0] — 2026-06-15
+
+### Added
+
+- **`anatomy mcp --with-ast-grep`: in-process structural-search extension.**
+  Second optional MCP extension on `anatomy mcp`, sibling to `--with-fff`
+  but architecturally distinct. Lazy-loads the existing `@ast-grep/napi`
+  optional dependency and exposes a single read-only `ast_grep_search`
+  tool inside anatomy's own MCP server — no subprocess, no IPC. The agent
+  can now find by AST shape (e.g. *"every `CallExpression` whose callee
+  is `spawnSync`"*), a verb that text-grep and fff structurally cannot
+  answer.
+  - **Tool surface.** Single `ast_grep_search` with inputs `pattern`
+    (required, ast-grep syntax), `lang` (optional — inferred from
+    `file_path` extension when absent), `file_path` (optional glob),
+    `max_results` (default 50, hard ceiling 500). Returns
+    `{ matches, files_scanned, truncated, language }`. Each match has
+    `{ file, line, column, text, captures }`. Captures are populated
+    from `$X`-style metavariables in the pattern.
+  - **Composes with `--with-fff`.** Both flags can be set together:
+    `anatomy mcp --with-fff --with-ast-grep` exposes the full union
+    (12 tools: 9 anatomy-native + 2 fff + 1 ast-grep).
+  - **Hard fail at startup** if `@ast-grep/napi` is unavailable (the
+    optional dependency can fail to install on exotic platforms).
+    Without the flag, no napi probe runs and behaviour is byte-identical
+    to v1.1.0.
+  - **Default-exclude list** for the file walk (hardcoded):
+    `node_modules`, `dist`, `build`, `out`, `target`, `.git`, `.next`,
+    `.nuxt`, `.svelte-kit`, `.turbo`, `.cache`, `coverage`, `vendor`,
+    `__pycache__`, `.venv`, `venv`, `env`, `.tox`, `.pytest_cache`.
+    `ANATOMY_AST_GREP_MAX_FILES` (default `5000`) caps the walk's file
+    count per call.
+  - **Telemetry.** New `ast_grep_call` variant on the existing
+    `~/.anatomy/telemetry.jsonl` stream. No lifecycle events (there's
+    no subprocess to enter `degraded`).
+
+### Refactor
+
+- **`loadAstGrep` extracted** from `verify-suggest/test-mining.ts` to a
+  new shared `anatomy-cli/src/ast-grep-loader.ts` so both verify-suggest
+  and the new ast-grep tool share one napi probe. Behaviour-preserving;
+  no test changes required.
+
+### Notes
+
+- No new runtime dependencies. `@ast-grep/napi` was already an
+  `optionalDependency` for the `kind = "ast_pattern"` rule-verify clause.
+  This release adds a second consumer of that dependency without
+  changing the install footprint.
+
 ## [1.1.0] — 2026-06-15
 
 ### Added

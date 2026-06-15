@@ -1,7 +1,7 @@
 {
   "name": "@anatomytool/cli",
-  "version": "1.1.0",
-  "description": "CLI for the Anatomy standard — validate, generate (Pass 1 deterministic + optional Pass 2 AI fill), show (--prose), migrate (v0.1 → v1.0), rehash (in-place fingerprint), explain. Manage paired .anatomy-memory entries (add, list, grep, show, stats, deprecate, thanks, credits). Serve as Claude Code SessionStart hook (anatomy hook) and stdio MCP server (anatomy mcp; 9 tools across section + memory access; --with-fff opt-in flag proxies the fff-mcp file-search server's tools into the same MCP namespace). Local-only telemetry with ANATOMY_TELEMETRY_DISABLE opt-out.",
+  "version": "1.2.0",
+  "description": "CLI for the Anatomy standard — validate, generate (Pass 1 deterministic + optional Pass 2 AI fill), show (--prose), migrate (v0.1 → v1.0), rehash (in-place fingerprint), explain. Manage paired .anatomy-memory entries (add, list, grep, show, stats, deprecate, thanks, credits). Serve as Claude Code SessionStart hook (anatomy hook) and stdio MCP server (anatomy mcp; 9 tools across section + memory access; --with-fff opt-in flag proxies fff-mcp's tools, --with-ast-grep opt-in flag exposes structural code search via @ast-grep/napi in-process). Local-only telemetry with ANATOMY_TELEMETRY_DISABLE opt-out.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
