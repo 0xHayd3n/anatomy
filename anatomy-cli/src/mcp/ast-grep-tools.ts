@@ -3,6 +3,7 @@
 // with --with-ast-grep. See docs/superpowers/specs/2026-06-15-anatomy-mcp-with-ast-grep-design.md.
 
 import { glob, readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { loadAstGrep, type AstGrepModule } from "../ast-grep-loader.js";
 
 export interface ToolDefinition {
@@ -275,14 +276,23 @@ async function runSearch(input: SearchInput): Promise<ToolResult> {
   })) {
     let source: string;
     try {
-      source = await readFile(`${process.cwd()}/${rel}`, "utf8");
+      source = await readFile(join(process.cwd(), rel), "utf8");
     } catch {
       continue; // unreadable file → skip silently, do NOT count in files_scanned
+    }
+    // Source-side parse failures (corrupted file, tree-sitter rejects content)
+    // skip-and-continue per spec; only pattern-side failures (findAll throws
+    // because the *pattern* won't compile against this language) terminate
+    // the walk with pattern_parse_failed.
+    let parsed: { root(): { findAll: (rule: { rule: { pattern: string } }) => unknown[] } };
+    try {
+      parsed = parser.parse(source);
+    } catch {
+      continue;
     }
     files_scanned++;
     let found: Array<{ text(): string; range(): { start: { line: number; column: number } }; getMatch(name: string): { text(): string } | null }>;
     try {
-      const parsed = parser.parse(source);
       found = parsed.root().findAll({ rule: { pattern: input.pattern } }) as typeof found;
     } catch (e) {
       return errorEnvelope("pattern_parse_failed", {
