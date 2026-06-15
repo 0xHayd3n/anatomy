@@ -207,6 +207,33 @@ mode / non-JS-family languages (optional `semgrep` CLI on PATH).
   Without `--with-fff`, the behaviour of `anatomy mcp` is byte-identical to
   earlier versions — no new dependencies are loaded, no discovery runs.
 
+- **`anatomy mcp --with-ast-grep`** — opt-in flag that exposes
+  `ast_grep_search` inside anatomy's MCP namespace via the existing
+  `@ast-grep/napi` optional dependency. Unlike `--with-fff`, this is **not a
+  bridge** — there's no subprocess, no IPC. The napi module loads in the
+  same Node process as anatomy's MCP server.
+
+  - **What it adds.** A single read-only `ast_grep_search` tool that takes
+    a `pattern` (ast-grep pattern syntax) plus either an explicit `lang` or
+    a `file_path` glob (lang inferred from extension). Returns matches with
+    `{ file, line, column, text, captures }`. Find by AST shape — *"every
+    `CallExpression` whose callee is `spawnSync`"* — instead of by text.
+  - **Hard fail on missing napi.** If `@ast-grep/napi` failed to install
+    (the optionalDep can fail on exotic platforms), `anatomy mcp
+    --with-ast-grep` exits 1 with an actionable error.
+  - **Default-exclude list.** The walk skips `node_modules`, `dist`,
+    `build`, `target`, `.git`, and similar non-source dirs by default —
+    without this, the tool would be unusable on any real repo. Pass an
+    explicit `file_path` to scope further.
+
+  | Env | Purpose | Default |
+  |---|---|---|
+  | `ANATOMY_AST_GREP_MAX_FILES` | Cap on files the walk reads per call. | `5000` |
+
+  Composes with `--with-fff`: `anatomy mcp --with-fff --with-ast-grep`
+  exposes both. Without the flag, the napi probe never runs and anatomy
+  mcp behaves byte-identically to v1.1.0.
+
 ### Telemetry
 
 - **`anatomy telemetry stats`** / **`anatomy telemetry clear`** — summarize
