@@ -23,6 +23,7 @@ function isMcpDisabledByEnv(): boolean {
 
 export interface McpCommandOptions {
   withFff?: boolean;
+  withAstGrep?: boolean;
 }
 
 export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> {
@@ -43,8 +44,10 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
     { capabilities: { tools: {} } },
   );
 
-  const anatomyDefs = [...sectionToolDefinitions, ...memoryToolDefinitions];
-  const anatomyHandlers = { ...sectionToolHandlers, ...memoryToolHandlers };
+  const anatomyDefs: Array<{ name: string; description: string; inputSchema: unknown }> =
+    [...sectionToolDefinitions, ...memoryToolDefinitions];
+  const anatomyHandlers: Record<string, (a: Record<string, unknown>) => Promise<unknown>> =
+    { ...sectionToolHandlers, ...memoryToolHandlers };
   let fffBridge: FFFBridgeType | null = null;
   let fffDefs: FFFToolDefinition[] = [];
   // Resolved only when --with-fff is set, so the no-flag path stays free of
@@ -127,6 +130,35 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
     }
   }
 
+  if (opts.withAstGrep) {
+    const { loadAstGrep } = await import("../ast-grep-loader.js");
+    const napi = await loadAstGrep();
+    if (!napi) {
+      process.stderr.write(
+        "error: @ast-grep/napi not available; reinstall with " +
+        "'npm install --save-optional @ast-grep/napi' or omit --with-ast-grep\n",
+      );
+      return 1;
+    }
+    if (!recordTelemetry) {
+      ({ recordTelemetry } = await import("../telemetry.js"));
+    }
+    const { astGrepToolDefinitions, astGrepToolHandlers } = await import("../mcp/ast-grep-tools.js");
+    // Collision check against the names already in the dispatch map.
+    for (const def of astGrepToolDefinitions) {
+      if (def.name in anatomyHandlers) {
+        process.stderr.write(`error: ast-grep tool name collision: ${def.name}\n`);
+        return 1;
+      }
+      if (fffDefs.some((d) => d.name === def.name)) {
+        process.stderr.write(`error: ast-grep tool name collision with fff bridge: ${def.name}\n`);
+        return 1;
+      }
+    }
+    anatomyDefs.push(...astGrepToolDefinitions);
+    Object.assign(anatomyHandlers, astGrepToolHandlers);
+  }
+
   const allDefs = [...anatomyDefs, ...fffDefs];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: allDefs }));
@@ -136,6 +168,34 @@ export async function mcpCommand(opts: McpCommandOptions = {}): Promise<number> 
       anatomyHandlers as Record<string, (a: Record<string, unknown>) => Promise<unknown>>
     )[name];
     if (handler) {
+      // ast-grep handlers get a telemetry wrapper; built-in section/memory
+      // handlers already self-instrument inside section-tools.ts.
+      if (opts.withAstGrep && name === "ast_grep_search" && recordTelemetry) {
+        const t0 = Date.now();
+        const result = await handler(args ?? {}) as { content: Array<{ text: string }>; isError?: boolean };
+        const text = result.content[0]?.text ?? "{}";
+        let parsed: { matches?: unknown[]; truncated?: boolean; language?: string; error?: string; files_scanned?: unknown };
+        try { parsed = JSON.parse(text); } catch { parsed = {}; }
+        const outcome: "ok" | "missing_pattern" | "missing_lang_or_file_path" | "pattern_parse_failed" | "error" =
+          !result.isError ? "ok"
+          : parsed.error === "missing_pattern" ? "missing_pattern"
+          : parsed.error === "missing_lang_or_file_path" ? "missing_lang_or_file_path"
+          : parsed.error === "pattern_parse_failed" ? "pattern_parse_failed"
+          : "error";
+        const filesScanned = typeof parsed.files_scanned === "number" ? parsed.files_scanned : 0;
+        recordTelemetry({
+          kind: "ast_grep_call",
+          ts: new Date().toISOString(),
+          tool: "ast_grep_search",
+          lang: typeof parsed.language === "string" ? parsed.language : "",
+          files_scanned: filesScanned,
+          matches: Array.isArray(parsed.matches) ? parsed.matches.length : 0,
+          truncated: !!parsed.truncated,
+          duration_ms: Date.now() - t0,
+          outcome,
+        });
+        return result;
+      }
       const result = await handler(args ?? {});
       return {
         content: [{ type: "text", text: JSON.stringify(result) }],

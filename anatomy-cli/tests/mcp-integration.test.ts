@@ -118,3 +118,84 @@ describe("anatomy mcp --with-fff", () => {
     expect((resp as { result: { tools: unknown[] } }).result.tools.length).toBe(9);
   });
 });
+
+describe("anatomy mcp --with-ast-grep", () => {
+  it("hard-fails with actionable error when @ast-grep/napi is unavailable", () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-ast-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    let stderr = "";
+    let exitCode = 0;
+    try {
+      execSync(`node "${BIN}" mcp --with-ast-grep`, {
+        cwd: repoDir,
+        env: {
+          ...process.env,
+          ANATOMY_AST_GREP_DISABLE: "1",
+          ANATOMY_TELEMETRY_DISABLE: "1",
+        },
+        stdio: ["pipe", "pipe", "pipe"],
+        shell: true,
+      });
+    } catch (e) {
+      const err = e as { status?: number; stderr?: Buffer };
+      exitCode = err.status ?? 0;
+      stderr = err.stderr?.toString() ?? "";
+    }
+    expect(exitCode).toBe(1);
+    expect(stderr).toMatch(/@ast-grep\/napi not available/i);
+  });
+
+  it("merges ast_grep_search into the tools list when enabled", { timeout: 30_000 }, async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-ast-on-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    const [resp] = await spawnAndCall(repoDir, [
+      { jsonrpc: "2.0", id: 1, method: "tools/list" },
+    ]);
+    // 9 anatomy-native tools — this call goes through the existing spawnAndCall
+    // helper which does NOT pass --with-ast-grep. The 10-tool case is exercised
+    // below by spawnAstGrep().
+    expect((resp as { result: { tools: unknown[] } }).result.tools.length).toBe(9);
+
+    const [respWith] = await spawnAstGrep(repoDir, [
+      { jsonrpc: "2.0", id: 1, method: "tools/list" },
+    ]);
+    const tools = (respWith as { result: { tools: Array<{ name: string }> } }).result.tools.map(
+      (t) => t.name,
+    );
+    expect(tools).toContain("ast_grep_search");
+    expect(tools).toHaveLength(10);
+  });
+});
+
+async function spawnAstGrep(repoDir: string, requests: JsonRpcRequest[]): Promise<unknown[]> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("node", [BIN, "mcp", "--with-ast-grep"], {
+      cwd: repoDir,
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: true,
+      env: { ...process.env, ANATOMY_TELEMETRY_DISABLE: "1" },
+    });
+    let buffer = "";
+    const responses: unknown[] = [];
+    proc.stdout.on("data", (chunk) => {
+      buffer += chunk.toString();
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) {
+          try { responses.push(JSON.parse(line)); } catch {}
+        }
+        if (responses.length === requests.length) proc.stdin.end();
+      }
+    });
+    proc.on("close", () => resolve(responses));
+    proc.on("error", reject);
+    setTimeout(() => { proc.kill(); reject(new Error("timeout")); }, 10_000);
+    for (const req of requests) proc.stdin.write(JSON.stringify(req) + "\n");
+  });
+}

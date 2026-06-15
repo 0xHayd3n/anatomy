@@ -100,7 +100,7 @@ Commands:
                                             Append a memory entry. Read content from stdin if "-" passed,
                                             or open $EDITOR when content arg is omitted.
                                             Kinds: gotcha | decision | convention | attempt | milestone
-  mcp [--with-fff]                          Start an MCP stdio server exposing anatomy's tools.
+  mcp [--with-fff] [--with-ast-grep]        Start an MCP stdio server exposing anatomy's tools.
                                             --with-fff: also proxy fff's tools (ffgrep, fffind) via
                                             a child fff-mcp subprocess. Hard-fails if no fff
                                             binary is on PATH. ANATOMY_FFF_BIN overrides the binary
@@ -109,6 +109,11 @@ Commands:
                                             a subcommand (default: none);
                                             ANATOMY_FFF_TIMEOUT_MS overrides the per-call timeout
                                             (default 5000).
+                                            --with-ast-grep: also expose ast_grep_search for
+                                            structural code search via @ast-grep/napi (in-process).
+                                            Hard-fails if the optional dep failed to install.
+                                            ANATOMY_AST_GREP_MAX_FILES (default 5000) caps the
+                                            file walk per call.
   memory list [--kind <k>] [--topic <s>]
               [--ref <s>] [--tag <t>]
               [--include-superseded]
@@ -191,6 +196,7 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (a === "--no-windsurf") { flags.noWindsurf = true; i++; continue; }
     if (a === "--no-pass2-retry") { flags.noPass2Retry = true; i++; continue; }
     if (a === "--with-fff") { flags.withFff = true; i++; continue; }
+    if (a === "--with-ast-grep") { flags.withAstGrep = true; i++; continue; }
     if (a === "--refresh-registry") { flags.refreshRegistry = true; i++; continue; }
     if (a === "--rich") { flags.rich = true; i++; continue; }
     if (a === "--no-pass1") { flags.noPass1 = true; i++; continue; }
@@ -349,7 +355,10 @@ async function main(): Promise<number> {
         onlyFresh: !!flags.onlyFresh,
       });
     case "mcp":
-      return mcpCommand({ withFff: !!flags.withFff });
+      return mcpCommand({
+        withFff: !!flags.withFff,
+        withAstGrep: !!flags.withAstGrep,
+      });
     case "telemetry":
       return telemetryCommand(positional, {});
     case "verify": {
