@@ -280,4 +280,116 @@ describe("anatomy mcp --with-git-history", () => {
     expect(exitCode).toBe(1);
     expect(stderr).toMatch(/not in a git repository/i);
   });
+
+  it("merges three git tools into the tools list when enabled", { timeout: 30_000 }, async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-git-on-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    const [respWith] = await spawnGitHistory(repoDir, [
+      { jsonrpc: "2.0", id: 1, method: "tools/list" },
+    ]);
+    const tools = (respWith as { result: { tools: Array<{ name: string }> } }).result.tools.map(
+      (t) => t.name,
+    );
+    expect(tools).toContain("git_blame");
+    expect(tools).toContain("git_log_search");
+    expect(tools).toContain("git_show");
+    expect(tools).toHaveLength(12); // 9 anatomy + 3 git
+  });
+
+  it("git_blame round-trips through MCP and returns matches", { timeout: 30_000 }, async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-git-blame-rt-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    execSync('git config user.email "test@example.com"', { cwd: repoDir, stdio: "ignore", shell: true });
+    execSync('git config user.name "Test User"', { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+    writeFileSync(join(repoDir, "a.ts"), "const x = 1;\nconst y = 2;\n");
+    execSync("git add a.ts", { cwd: repoDir, stdio: "ignore", shell: true });
+    execSync('git commit -m "add a.ts"', { cwd: repoDir, stdio: "ignore", shell: true });
+
+    const [resp] = await spawnGitHistory(repoDir, [
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: { name: "git_blame", arguments: { file_path: "a.ts" } },
+      },
+    ]);
+    const text = (resp as { result: { content: Array<{ text: string }> } }).result.content[0].text;
+    const data = JSON.parse(text);
+    expect(data.matches).toHaveLength(2);
+    expect(data.matches[0].author).toBe("Test User");
+    expect(data.matches[0].commit).toMatch(/^[0-9a-f]{40}$/);
+  });
+
+  it("composes with --with-ast-grep (13 tools total)", { timeout: 30_000 }, async () => {
+    const repoDir = mkdtempSync(join(tmpdir(), "anat-mcp-git-ast-"));
+    execSync("git init", { cwd: repoDir, stdio: "ignore", shell: true });
+    writeFileSync(join(repoDir, ".anatomy"), ANATOMY);
+
+    const [resp] = await spawnCombo(repoDir, [
+      { jsonrpc: "2.0", id: 1, method: "tools/list" },
+    ]);
+    const tools = (resp as { result: { tools: Array<{ name: string }> } }).result.tools.map((t) => t.name);
+    expect(tools).toContain("ast_grep_search");
+    expect(tools).toContain("git_blame");
+    expect(tools).toContain("git_log_search");
+    expect(tools).toContain("git_show");
+    expect(tools).toHaveLength(13); // 9 anatomy + 1 ast-grep + 3 git
+  });
 });
+
+async function spawnGitHistory(repoDir: string, requests: JsonRpcRequest[]): Promise<unknown[]> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("node", [BIN, "mcp", "--with-git-history"], {
+      cwd: repoDir,
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: true,
+      env: { ...process.env, ANATOMY_TELEMETRY_DISABLE: "1" },
+    });
+    let buffer = "";
+    const responses: unknown[] = [];
+    proc.stdout.on("data", (chunk) => {
+      buffer += chunk.toString();
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) { try { responses.push(JSON.parse(line)); } catch {} }
+        if (responses.length === requests.length) proc.stdin.end();
+      }
+    });
+    proc.on("close", () => resolve(responses));
+    proc.on("error", reject);
+    setTimeout(() => { proc.kill(); reject(new Error("timeout")); }, 10_000);
+    for (const req of requests) proc.stdin.write(JSON.stringify(req) + "\n");
+  });
+}
+
+async function spawnCombo(repoDir: string, requests: JsonRpcRequest[]): Promise<unknown[]> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn("node", [BIN, "mcp", "--with-ast-grep", "--with-git-history"], {
+      cwd: repoDir,
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: true,
+      env: { ...process.env, ANATOMY_TELEMETRY_DISABLE: "1" },
+    });
+    let buffer = "";
+    const responses: unknown[] = [];
+    proc.stdout.on("data", (chunk) => {
+      buffer += chunk.toString();
+      let nl: number;
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) { try { responses.push(JSON.parse(line)); } catch {} }
+        if (responses.length === requests.length) proc.stdin.end();
+      }
+    });
+    proc.on("close", () => resolve(responses));
+    proc.on("error", reject);
+    setTimeout(() => { proc.kill(); reject(new Error("timeout")); }, 10_000);
+    for (const req of requests) proc.stdin.write(JSON.stringify(req) + "\n");
+  });
+}
