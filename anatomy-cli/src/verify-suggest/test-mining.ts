@@ -5,6 +5,7 @@
 
 import { glob, readFile } from "node:fs/promises";
 import type { VerifyCandidate } from "./types.js";
+import { loadAstGrep } from "../ast-grep-loader.js";
 
 const TEST_GLOB = "{tests,test,__tests__,spec,specs}/**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}";
 const MAX_FILES = 500;
@@ -24,14 +25,6 @@ const ASSERTION_PATTERNS = [
   "t.throws($EXPR, $CLASS)",
   "t.rejects($EXPR, $CLASS)",
 ];
-
-async function loadAstGrep(): Promise<typeof import("@ast-grep/napi") | null> {
-  try {
-    return await import("@ast-grep/napi");
-  } catch {
-    return null;
-  }
-}
 
 async function collectTestFiles(repoRoot: string): Promise<string[]> {
   const files: string[] = [];
